@@ -24,6 +24,7 @@
             min-height: 100vh;
             padding: 20px;
             position: relative;
+            overflow-x: hidden;
         }
 
         body::before {
@@ -39,18 +40,17 @@
 
         .container {
             text-align: center;
-            max-width: 600px;
             width: 100%;
+            max-width: 900px;
         }
 
-        /* 📋 バージョン表記のスタイル */
         .version-badge {
             display: inline-block;
             font-size: 0.75rem;
             color: #03dac6;
             background-color: rgba(3, 218, 198, 0.15);
             border: 1px solid #03dac6;
-            padding: 2px 10px;
+            padding: 2px 12px;
             border-radius: 20px;
             margin-bottom: 15px;
             letter-spacing: 1px;
@@ -66,7 +66,7 @@
 
         .squid-symbols {
             font-size: 2.2rem;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             letter-spacing: 15px;
             padding-left: 15px;
         }
@@ -78,119 +78,123 @@
             font-size: 1.1rem;
             color: #03dac6; 
             letter-spacing: 3px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             font-weight: 700;
+        }
+
+        /* 🗂️ カテゴリー選択タブ */
+        .tab-menu {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            background: rgba(22, 23, 30, 0.6);
+            border: 2px solid #2a2b36;
+            color: #aaa;
+            padding: 8px 18px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            border-color: #ff007f;
+        }
+
+        .tab-btn.active {
+            background: #ff007f;
+            color: #ffffff;
+            border-color: #ff007f;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+        }
+
+        /* 🕹️ 横スクロールカルーセル */
+        .game-carousel-wrapper {
+            width: 100%;
+            padding: 10px 0;
+            margin-bottom: 35px;
+            position: relative;
         }
 
         .game-list {
             display: flex;
-            flex-direction: column;
-            gap: 18px;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 15px 10px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
+        .game-list::-webkit-scrollbar { height: 6px; }
+        .game-list::-webkit-scrollbar-track { background: #111217; border-radius: 10px; }
+        .game-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .game-list::-webkit-scrollbar-thumb:hover { background: #ff007f; }
+
         .game-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 25px;
+            flex: 0 0 220px;
+            height: 220px;
             background-color: #16171e;
-            border: 3px solid #2a2b36;
+            border: 4px solid #2a2b36;
             text-decoration: none;
             color: #ffffff;
-            font-size: 1.15rem;
-            font-weight: 700;
-            transition: all 0.3s ease;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            text-align: left;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
         }
+
+        .game-card.hidden { display: none !important; }
 
         .game-card:hover:not(.locked) {
             border-color: #ff007f;
             background-color: #251221;
-            transform: translateY(-3px);
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 12px 25px rgba(255, 0, 127, 0.5);
         }
 
-        .game-card.locked {
-            opacity: 0.35;
-            border: 3px dashed #444;
-            background-color: #0d0e12;
-            cursor: not-allowed;
-        }
-        .game-card.locked:hover {
-            transform: none;
-            border-color: #555;
-            box-shadow: none;
-        }
+        .card-info { display: flex; flex-direction: column; gap: 5px; }
+        .card-stage-num { font-size: 0.8rem; color: #ff007f; font-weight: 900; letter-spacing: 1px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; line-height: 1.4; }
+        .card-symbol { align-self: flex-end; font-size: 1.8rem; font-weight: 900; color: rgba(255, 255, 255, 0.2); transition: color 0.3s; }
+        .game-card:hover .card-symbol { color: #ff007f; }
 
-        .card-symbol { color: #ff007f; font-size: 1.3rem; font-weight: 900; }
-        .locked-symbol { color: #888; font-size: 1.2rem; }
+        .game-card.locked { opacity: 0.3; border: 4px dashed #444; background-color: #0d0e12; cursor: not-allowed; }
+        .game-card.locked .card-stage-num { color: #666; }
 
         /* 🗃️ コレクションアルバム */
         .collection-section {
-            margin-top: 40px;
             background: #111217;
             border: 1px solid #2a2b36;
             padding: 20px;
             border-radius: 8px;
             text-align: left;
+            margin-top: 20px;
         }
 
-        .collection-section h3 {
-            font-size: 1.1rem;
-            color: #03dac6;
-            margin-bottom: 15px;
-            text-align: center;
-            letter-spacing: 1px;
-        }
+        .collection-section h3 { font-size: 1.1rem; color: #03dac6; margin-bottom: 15px; text-align: center; letter-spacing: 1px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 12px; }
 
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        /* 🎴 リカモンカードの基本デザイン */
         .rikamon-card {
-            background: #1f2029;
-            border: 2px solid #333;
-            border-radius: 6px;
-            padding: 8px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            aspect-ratio: 3 / 4; /* ポケモンカード風の比率 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: #1f2029; border: 2px solid #333; border-radius: 6px; padding: 8px; text-align: center;
+            position: relative; overflow: hidden; aspect-ratio: 3 / 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* 未獲得時：絵文字のプレースホルダーを表示 */
         .card-placeholder { font-size: 32px; filter: grayscale(100%); opacity: 0.15; }
         .card-name { font-size: 11px; font-weight: bold; color: #444; margin-top: 5px; }
-
-        /* 💾 獲得時：画像（rikamon-card/）を表示し、モノクロ解除 */
-        .rikamon-card img {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover;
-            display: none; /* 初期は非表示 */
-            cursor: pointer;
-        }
-
-        .rikamon-card.owned img {
-            display: block; /* 獲得したら画像を表示 */
-            animation: cardGet 0.6s ease-out;
-        }
-
-        .rikamon-card.owned {
-            border-color: #00f0ff;
-            box-shadow: 0 4px 10px rgba(0, 240, 255, 0.3);
-        }
-
-        .rikamon-card.owned.shiny-card {
-            border-color: gold;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-        }
+        .rikamon-card img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; cursor: pointer; }
+        .rikamon-card.owned img { display: block; animation: cardGet 0.6s ease-out; }
+        .rikamon-card.owned { border-color: #00f0ff; box-shadow: 0 4px 10px rgba(0, 240, 255, 0.3); }
+        .rikamon-card.owned.shiny-card { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
 
         @keyframes cardGet {
             0% { transform: scale(0.6) rotate(-10deg); filter: brightness(3); }
@@ -198,49 +202,12 @@
         }
 
         /* 🔑 コード入力エリア */
-        .code-input-section {
-            margin-top: 30px;
-            background: #111217;
-            border: 1px solid #2a2b36;
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        .code-input-section h3 {
-            font-size: 1rem;
-            color: #ff007f;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-
+        .code-input-section { margin-top: 30px; background: #111217; border: 1px solid #2a2b36; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .code-input-section h3 { font-size: 1rem; color: #ff007f; margin-bottom: 12px; letter-spacing: 1px; }
         .input-group { display: flex; gap: 10px; justify-content: center; }
-
-        .secret-code-field {
-            background: #20222b;
-            border: 2px solid #333;
-            color: #ffffff;
-            padding: 10px 15px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 4px;
-            text-align: center;
-            letter-spacing: 2px;
-            width: 60%;
-            outline: none;
-        }
+        .secret-code-field { background: #20222b; border: 2px solid #333; color: #ffffff; padding: 10px 15px; font-size: 16px; font-weight: bold; border-radius: 4px; text-align: center; letter-spacing: 2px; width: 60%; outline: none; }
         .secret-code-field:focus { border-color: #ff007f; }
-
-        .code-submit-btn {
-            background: #ff007f;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        .code-submit-btn { background: #ff007f; color: white; border: none; padding: 10px 25px; font-size: 15px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
         .code-submit-btn:hover { background: #e60072; }
 
         footer { margin-top: 40px; font-size: 0.75rem; color: #444655; letter-spacing: 2px; }
@@ -249,8 +216,7 @@
 <body>
 
     <div class="container">
-        <!-- 📋 システムバージョンを上部に表示 -->
-        <div class="version-badge">SYSTEM VERSION：v2.4.0</div>
+        <div class="version-badge">SYSTEM VERSION：v2.7.0</div>
 
         <h1>リカゲーム</h1>
         <div class="squid-symbols">
@@ -258,33 +224,68 @@
         </div>
         <div class="subtitle">生存をかけたミニゲームを選択せよ</div>
 
-        <div class="game-list">
-            <!-- STAGE 1〜3 -->
-            <a href="rika_game_bio2-01.html" class="game-card">
-                <span>STAGE 1：細胞の構造仕分け</span>
-                <span class="card-symbol">○</span>
-            </a>
-            <a href="rika_game_bio2-02.html" class="game-card">
-                <span>STAGE 2：単細胞生物の物質出入</span>
-                <span class="card-symbol">△</span>
-            </a>
-            <a href="rika_game_quiz.html" class="game-card">
-                <span>STAGE 3：理科一問一答（全526問）</span>
-                <span class="card-symbol">□</span>
-            </a>
-            <a href="rika_game_rikamon.html" class="game-card">
-                <span>STAGE 4：リカモンバトル（ボーナス）</span>
-                <span class="card-symbol" style="color:#00ff66;">✨</span>
-            </a>
-
-            <!-- 🔒 続報お楽しみ枠：STAGE 5（完全ロック、次への期待を煽る） -->
-            <a href="#" class="game-card locked" onclick="alert('【通信エラー】STAGE 5 は現在ロックされている。運営からのアップデート続報を待て。'); return false;">
-                <span>STAGE 5：？？？？？？（次期アップデート対象）</span>
-                <span class="locked-symbol">🔒</span>
-            </a>
+        <div class="tab-menu">
+            <button class="tab-btn active" onclick="filterStages('all')">ALL STAGE</button>
+            <button class="tab-btn" onclick="filterStages('bio')">BIOLOGY</button>
+            <button class="tab-btn" onclick="filterStages('chem-phys')">CHEM / PHYS</button>
+            <button class="tab-btn" onclick="filterStages('all-range')">BONUS</button>
+            <button class="tab-btn" onclick="filterStages('coming')">NEXT UPDATE</button>
         </div>
 
-        <!-- 🔑 コード入力エリア -->
+        <div class="game-carousel-wrapper">
+            <div class="game-list">
+                
+                <a href="rika_game_bio2-01.html" class="game-card" data-tags="bio">
+                    <div class="card-info">
+                        <span class="card-stage-num">STAGE 01</span>
+                        <span class="card-title">細胞の構造<br>仕分け</span>
+                    </div>
+                    <span class="card-symbol">○</span>
+                </a>
+                
+                <a href="rika_game_bio2-02.html" class="game-card" data-tags="bio">
+                    <div class="card-info">
+                        <span class="card-stage-num">STAGE 02</span>
+                        <span class="card-title">単細胞生物の<br>物質出入</span>
+                    </div>
+                    <span class="card-symbol">△</span>
+                </a>
+
+                <a href="rika_game_quiz.html" class="game-card" data-tags="chem-phys">
+                    <div class="card-info">
+                        <span class="card-stage-num">STAGE 03</span>
+                        <span class="card-title">理科一問一答<br>(全526問)</span>
+                    </div>
+                    <span class="card-symbol">□</span>
+                </a>
+
+                <a href="rika_game_invader.html" class="game-card" data-tags="chem-phys">
+                    <div class="card-info">
+                        <span class="card-stage-num">STAGE 04</span>
+                        <span class="card-title">元素記号<br>シューター</span>
+                    </div>
+                    <span class="card-symbol">👾</span>
+                </a>
+
+                <a href="rika_game_rikamon.html" class="game-card" data-tags="all-range">
+                    <div class="card-info">
+                        <span class="card-stage-num">STAGE 05</span>
+                        <span class="card-title">リカモンバトル<br>(ボーナス)</span>
+                    </div>
+                    <span class="card-symbol" style="color:#00ff66;">✨</span>
+                </a>
+
+                <a href="#" class="game-card locked" data-tags="coming" onclick="alert('STAGE 06 は現在運営が開発中だ。次期アップデートを待て。'); return false;">
+                    <div class="card-info">
+                        <span class="card-stage-num">STAGE 06</span>
+                        <span class="card-title">天体運行<br>シミュレータ</span>
+                    </div>
+                    <span class="locked-symbol">🔒</span>
+                </a>
+
+            </div>
+        </div>
+
         <div class="code-input-section">
             <h3>🔑 捕獲コードを入力してリカモンカードを獲得せよ</h3>
             <div class="input-group">
@@ -293,7 +294,6 @@
             </div>
         </div>
 
-        <!-- 🗃️ リカモンカード図鑑コレクション（画像表示・保存対応版） -->
         <div class="collection-section">
             <h3>🎴 リカモンカードアルバム（長押しや右クリックで画像保存可能）</h3>
             <div class="card-grid">
@@ -302,14 +302,13 @@
                 <div class="rikamon-card" id="card-PARAM"><div class="card-placeholder">🩴</div><div class="card-name">ゾウリムシアン</div><img src="rikamon_card/PARAM.png" title="長押し・右クリックで保存"></div>
                 <div class="rikamon-card" id="card-AMMON"><div class="card-placeholder">🐚</div><div class="card-name">アンモナイトス</div><img src="rikamon_card/AMMON.png" title="長押し・右クリックで保存"></div>
                 <div class="rikamon-card" id="card-MAGNET"><div class="card-placeholder">🧲</div><div class="card-name">ハエナワル</div><img src="rikamon_card/MAGNET.png" title="長押し・右クリックで保存"></div>
-                <div class="rikamon-card" id="card-QUARTZ"><div class="card-sprite card-placeholder">💎</div><div class="card-name">セキエイノドン</div><img src="rikamon_card/QUARTZ.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-QUARTZ"><div class="card-placeholder">💎</div><div class="card-name">セキエイノドン</div><img src="rikamon_card/QUARTZ.png" title="長押し・右クリックで保存"></div>
                 <div class="rikamon-card" id="card-HEMO"><div class="card-placeholder">🔴</div><div class="card-name">ヘモグロビンゴ</div><img src="rikamon_card/HEMO.png" title="長押し・右クリックで保存"></div>
-                <div class="rikamon-card" id="card-MAGMA"><div class="card-placeholder">🌋</div><div class="card-name">マグマドラン</div><img src="rikamon_card/MAGMA.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-MAGMA"><div class="card-placeholder">🌋</div><div class="card-name">マグマドラン</div><img src="rikamon_card/MAGMA.png" title="長押し<td>右クリックで保存"></div>
                 <div class="rikamon-card" id="card-NH3GAS"><div class="card-placeholder">💨</div><div class="card-name">アンモニアデス</div><img src="rikamon_card/NH3GAS.png" title="長押し・右クリックで保存"></div>
                 <div class="rikamon-card" id="card-GRAVITY"><div class="card-placeholder">🍎</div><div class="card-name">ニュートンG</div><img src="rikamon_card/GRAVITY.png" title="長押し・右クリックで保存"></div>
                 
-                <!-- 👑 特別枠：幻の色違いカード -->
-                <div class="rikamon-card" id="card-SHINY456" style="grid-column: span 3; margin-top: 5px; aspect-ratio: auto; height: 110px;">
+                <div class="rikamon-card" id="card-SHINY456" style="grid-column: span 3; aspect-ratio: auto; height: 100px;">
                     <div class="card-placeholder">✨👑★</div>
                     <div class="card-name">幻の色違いリカモン</div>
                     <img src="rikamon_card/SHINY456.png" title="長押し・右クリックで保存">
@@ -323,6 +322,23 @@
     </div>
 
     <script>
+        function filterStages(tag) {
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach(card => {
+                const cardTag = card.getAttribute('data-tags');
+                if (tag === 'all' || cardTag === tag) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            document.querySelector('.game-list').scrollLeft = 0;
+        }
+
         const VALID_CODES = ["MITO", "ELODEA", "PARAM", "AMMON", "MAGNET", "QUARTZ", "HEMO", "MAGMA", "NH3GAS", "GRAVITY", "SHINY456"];
 
         function verifySecretCode() {
@@ -338,7 +354,6 @@
                     return;
                 }
 
-                // 🎉 カード画像表示＆アクティブ化
                 cardElement.classList.add('owned');
                 
                 if (userCode === "SHINY456") {

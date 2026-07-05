@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>元素インベーダー - ランダム選抜版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=700;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #0b0c10;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            height: 100vh;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .header-area {
+            text-align: center;
+            margin-bottom: 5px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 900;
+            color: #ff007f;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+            letter-spacing: 1px;
+        }
+
+        .stage-title {
+            color: #03dac6;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .game-container {
+            max-width: 500px;
+            width: 100%;
+            flex: 1;
+            min-height: 280px;
+            background: #111217;
+            border: 3px solid #2a2b36;
+            border-radius: 12px 12px 0 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .hud {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: bold;
+            background: rgba(22, 23, 30, 0.85);
+            border-bottom: 1px solid #2a2b36;
+            z-index: 8;
+        }
+        .score-box { color: #00f0ff; }
+        .life-box { color: #ff007f; }
+
+        .invader {
+            position: absolute;
+            background: rgba(255, 0, 127, 0.1);
+            border: 2px solid #ff007f;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 900;
+            font-size: 12px;
+            white-space: nowrap;
+            box-shadow: 0 0 8px rgba(255, 0, 127, 0.4);
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .boss-invader {
+            position: absolute;
+            top: 45px; left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 80px;
+            background: radial-gradient(circle, #251221 0%, #111217 100%);
+            border: 3px dashed #ff007f;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 4;
+            animation: bossFloat 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes bossFloat {
+            0% { transform: translateX(-50%) translateY(0); }
+            100% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        .boss-name { font-size: 14px; font-weight: 900; color: #fff; text-shadow: 0 0 8px #ff007f; margin-bottom: 4px; }
+        .boss-hp-bar { width: 100px; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+        .boss-hp-fill { width: 100%; height: 100%; background: #ff007f; }
+
+        .laser-line {
+            position: absolute;
+            bottom: 25px; left: 0; width: 100%; height: 2px;
+            background: #03dac6; box-shadow: 0 0 8px #03dac6;
+            z-index: 2;
+        }
+
+        .cannon-turret {
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 36px; height: 25px;
+            background: #03dac6;
+            border-radius: 6px 6px 0 0;
+            z-index: 5;
+        }
+        .cannon-barrel {
+            position: absolute;
+            top: -10px; left: 14px;
+            width: 8px; height: 12px;
+            background: #03dac6;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .laser-beam {
+            position: absolute;
+            width: 4px;
+            background: linear-gradient(to top, #00ff66, #fff);
+            box-shadow: 0 0 10px #00ff66;
+            z-index: 6;
+            transform: translateX(-50%);
+            animation: beamShoot 0.2s ease-out forwards;
+        }
+
+        @keyframes beamShoot {
+            0% { height: 0; bottom: 25px; opacity: 1; }
+            100% { height: 100%; bottom: 25px; opacity: 0; }
+        }
+
+        /* ⌨️ JavaScriptでボタンが自動生成される2段キーボードパネル */
+        .keyboard-panel {
+            max-width: 500px;
+            width: 100%;
+            background: #16171e;
+            border: 3px solid #2a2b36;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .key-btn {
+            flex: 1;
+            height: 44px;
+            background: #20222b;
+            border: 2px solid #3f4257;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 900;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        .key-btn:active {
+            border-color: #03dac6;
+            color: #03dac6;
+            background: #152528;
+            transform: scale(0.95);
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 12, 16, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .screen-title { font-size: 20px; font-weight: 900; color: #00f0ff; margin-bottom: 10px; }
+        .screen-desc { font-size: 12px; color: #aaa; line-height: 1.5; margin-bottom: 15px; max-width: 360px; }
+        .start-btn {
+            background: #ff007f; color: white; border: none; padding: 10px 30px;
+            font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-area">
+        <h1>元素インベーダー</h1>
+        <div class="stage-title">STAGE 05：ELEMENT SHOOTER</div>
+    </div>
+
+    <div class="game-container" id="game-zone">
+        <div class="hud">
+            <div class="score-box" id="hud-task">撃破数: <span id="txt-score">0</span> / 8</div>
+            <div class="life-box">シールド: <span id="txt-life">♥♥♥</span></div>
+        </div>
+
+        <div class="boss-invader" id="boss-unit">
+            <div class="boss-name" id="boss-target-name">？？？</div>
+            <div class="boss-hp-bar"><div class="boss-hp-fill" id="boss-hp-core"></div></div>
+        </div>
+
+        <div class="laser-line"></div>
+        
+        <div class="cannon-turret" id="player-cannon">
+            <div class="cannon-barrel"></div>
+        </div>
+
+        <div class="overlay-screen" id="start-screen">
+            <div class="screen-title">元素防衛ミッション</div>
+            <div class="screen-desc">
+                迫り来る「元素名」に対応する「元素記号」を撃て！<br>
+                全30種類の候補から、<b>毎回10種類がランダムに選出</b>されるぞ。<br>
+                通常形態を8体倒すと現れる【巨大元素コア（ボス）】を爆砕せよ！
+            </div>
+            <button class="start-btn" onclick="startGame()">ミッション開始</button>
+        </div>
+
+        <div class="overlay-screen" id="gameover-screen" style="display: none;">
+            <div class="screen-title" id="gameover-title">結果</div>
+            <div class="screen-desc" id="gameover-desc">説明文</div>
+            <button class="start-btn" onclick="startGame()">再挑戦する</button>
+        </div>
+    </div>
+
+    <div class="keyboard-panel" id="keyboard-box">
+        <div class="keyboard-row" id="row-1"></div>
+        <div class="keyboard-row" id="row-2"></div>
+    </div>
+
+    <script>
+        // 🧪 1〜20番の元素データ
+        const PERIODIC_1_20 = [
+            { name: "水素", symbol: "H" }, { name: "ヘリウム", symbol: "He" }, { name: "リチウム", symbol: "Li" }, { name: "ベリリウム", symbol: "Be" },
+            { name: "ホウ素", symbol: "B" }, { name: "炭素", symbol: "C" }, { name: "窒素", symbol: "N" }, { name: "酸素", symbol: "O" },
+            { name: "フッ素", symbol: "F" }, { name: "ネオン", symbol: "Ne" }, { name: "ナトリウム", symbol: "Na" }, { name: "マグネシウム", symbol: "Mg" },
+            { name: "アルミニウム", symbol: "Al" }, { name: "ケイ素", symbol: "Si" }, { name: "リン", symbol: "P" }, { name: "硫黄", symbol: "S" },
+            { name: "塩素", symbol: "Cl" }, { name: "アルゴン", symbol: "Ar" }, { name: "カリウム", symbol: "K" }, { name: "カルシウム", symbol: "Ca" }
+        ];
+
+        // 🪙 中学理科で登場する有名な重要金属元素データ
+        const FAMOUS_METALS = [
+            { name: "鉄", symbol: "Fe" }, { name: "銅", symbol: "Cu" }, { name: "亜鉛", symbol: "Zn" }, { name: "銀", symbol: "Ag" },
+            { name: "バリウム", symbol: "Ba" }, { name: "金", symbol: "Au" }, { name: "白金", symbol: "Pt" }, { name: "水銀", symbol: "Hg" },
+            { name: "鉛", symbol: "Pb" }, { name: "マンガン", symbol: "Mn" }
+        ];
+
+        // 今回のバトルで使われる選抜メンバー（10種）
+        let activeElementsPool = [];
+
+        let score = 0;
+        let lives = 3;
+        let gameActive = false;
+        let isBossPhase = false;
+        
+        let activeInvaders = [];
+        let bossMaxHp = 5;
+        let bossHp = 5;
+        let bossCurrentElement = null;
+
+        let spawnInterval = null;
+        let gameLoopInterval = null;
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            gameActive = true;
+            isBossPhase = false;
+            bossHp = 5;
+
+            // 💡 【新機能】1〜20番＋有名金属から毎回ランダムに10種類をセット
+            selectRandomElements();
+            buildDynamicKeyboard();
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('gameover-screen').style.display = 'none';
+            document.getElementById('boss-unit').style.display = 'none';
+            document.getElementById('hud-task').innerHTML = "撃破数: <span id='txt-score'>0</span> / 8";
+            document.getElementById('txt-score').innerText = score;
+            updateLifeDisplay();
+
+            activeInvaders.forEach(inv => inv.element.remove());
+            activeInvaders = [];
+
+            clearInterval(spawnInterval);
+            clearInterval(gameLoopInterval);
+            
+            spawnInterval = setInterval(spawnInvader, 2300);
+            gameLoopInterval = setInterval(updateGame, 50);
+
+            spawnInvader();
+        }
+
+        // 🎲 元素プールから10個をランダム抽出し、キーボード用に並び替える
+        function selectRandomElements() {
+            // すべての候補を合体
+            let allCandidates = [...PERIODIC_1_20, ...FAMOUS_METALS];
+            // 完全シャッフル
+            allCandidates.sort(() => Math.random() - 0.5);
+            // 先頭から10個を今回のプールに決定
+            activeElementsPool = allCandidates.slice(0, 10);
+        }
+
+        // ⌨️ 抽出された10個の元素を上段5個・下段5個に綺麗にマッピング生成
+        function buildDynamicKeyboard() {
+            const row1 = document.getElementById('row-1');
+            const row2 = document.getElementById('row-2');
+            row1.innerHTML = "";
+            row2.innerHTML = "";
+
+            // アルファベット順（または記号順）に見やすく並び替えて配置
+            let sortedPool = [...activeElementsPool].sort((a, b) => a.symbol.localeCompare(b.symbol));
+
+            for (let i = 0; i < sortedPool.length; i++) {
+                const item = sortedPool[i];
+                const btn = document.createElement('button');
+                btn.className = 'key-btn';
+                btn.innerText = item.symbol;
+                btn.onclick = function() { pressKey(item.symbol); };
+
+                if (i < 5) {
+                    row1.appendChild(btn);
+                } else {
+                    row2.appendChild(btn);
+                }
+            }
+        }
+
+        function spawnInvader() {
+            if (!gameActive || isBossPhase) return;
+
+            // 今回選ばれた10種類の中からランダムに敵を発生させる
+            const data = activeElementsPool[Math.floor(Math.random() * activeElementsPool.length)];
+            const div = document.createElement('div');
+            div.className = 'invader';
+            div.innerText = data.name;
+            
+            const gameZone = document.getElementById('game-zone');
+            const randomX = Math.floor(Math.random() * (gameZone.offsetWidth - 100)) + 50;
+            
+            div.style.left = randomX + 'px';
+            div.style.top = '40px';
+            gameZone.appendChild(div);
+
+            activeInvaders.push({
+                element: div, name: data.name, symbol: data.symbol, y: 40, x: randomX
+            });
+        }
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            if (!isBossPhase) {
+                let speed = 1.2 + (score * 0.15);
+                for (let i = activeInvaders.length - 1; i >= 0; i--) {
+                    let inv = activeInvaders[i];
+                    inv.y += speed;
+                    inv.element.style.top = inv.y + 'px';
+
+                    if (inv.y >= (document.getElementById('game-zone').offsetHeight - 45)) { 
+                        inv.element.remove();
+                        activeInvaders.splice(i, 1);
+                        reduceLife();
+                    }
+                }
+            } else {
+                let bossUnit = document.getElementById('boss-unit');
+                let currentTop = parseFloat(bossUnit.style.top || 50);
+                currentTop += 0.18; // ボスの接近速度を少しアップ
+                bossUnit.style.top = currentTop + 'px';
+
+                if (currentTop >= (document.getElementById('game-zone').offsetHeight - 140)) {
+                    endGame(false);
+                }
+            }
+        }
+
+        function createLaserEffect(targetX) {
+            const gameZone = document.getElementById('game-zone');
+            const beam = document.createElement('div');
+            beam.className = 'laser-beam';
+            beam.style.left = targetX + 'px';
+            gameZone.appendChild(beam);
+            setTimeout(() => { beam.remove(); }, 200);
+        }
+
+        function pressKey(symbol) {
+            if (!gameActive) return;
+
+            if (!isBossPhase) {
+                let targetIndex = -1;
+                let highestY = -1;
+
+                for (let i = 0; i < activeInvaders.length; i++) {
+                    if (activeInvaders[i].symbol === symbol) {
+                        if (activeInvaders[i].y > highestY) {
+                            highestY = activeInvaders[i].y;
+                            targetIndex = i;
+                        }
+                    }
+                }
+
+                if (targetIndex !== -1) {
+                    let target = activeInvaders[targetIndex];
+                    createLaserEffect(target.x);
+                    
+                    target.element.style.background = "#00ff66";
+                    target.element.style.borderColor = "#00ff66";
+                    target.element.innerText = "💥 " + target.symbol;
+                    activeInvaders.splice(targetIndex, 1);
+                    score++;
+                    document.getElementById('txt-score').innerText = score;
+                    setTimeout(() => { target.element.remove(); }, 150);
+
+                    if (score >= 8) {
+                        startBossPhase();
+                    }
+                } else {
+                    createLaserEffect(document.getElementById('game-zone').offsetWidth / 2);
+                }
+            } else {
+                createLaserEffect(document.getElementById('game-zone').offsetWidth / 2);
+                if (bossCurrentElement.symbol === symbol) {
+                    bossHp--;
+                    const hpPer = (bossHp / bossMaxHp) * 100;
+                    document.getElementById('boss-hp-core').style.width = hpPer + '%';
+
+                    if (bossHp <= 0) {
+                        endGame(true);
+                    } else {
+                        generateBossWeakness();
+                    }
+                } else {
+                    reduceLife();
+                }
+            }
+        }
+
+        function startBossPhase() {
+            isBossPhase = true;
+            clearInterval(spawnInterval);
+            
+            activeInvaders.forEach(inv => inv.element.remove());
+            activeInvaders = [];
+
+            document.getElementById('hud-task').innerHTML = "BOSS CORE HP";
+
+            const bossUnit = document.getElementById('boss-unit');
+            bossUnit.style.display = 'flex';
+            bossUnit.style.top = '50px';
+            document.getElementById('boss-hp-core').style.width = '100%';
+
+            generateBossWeakness();
+        }
+
+        function generateBossWeakness() {
+            // ボスの弱点も、今回選抜された10種類の中から出題
+            bossCurrentElement = activeElementsPool[Math.floor(Math.random() * activeElementsPool.length)];
+            document.getElementById('boss-target-name').innerText = "【" + bossCurrentElement.name + "】";
+        }
+
+        function reduceLife() {
+            lives--;
+            updateLifeDisplay();
+            if (lives <= 0) {
+                endGame(false);
+            }
+        }
+
+        function updateLifeDisplay() {
+            let heartStr = "";
+            for (let i = 0; i < lives; i++) heartStr += "♥";
+            if (heartStr === "") heartStr = "❌ 大破";
+            document.getElementById('txt-life').innerText = heartStr;
+        }
+
+        // ⌨️ PC用：選ばれた10種にマッチする入力を動的にキャッチするようキー判定を最適化
+        document.addEventListener('keydown', function(event) {
+            if (!gameActive) return;
+            let pressedString = event.key; // 大文字小文字の組み合わせを柔軟に拾う
+
+            // 画面内プールにある記号とキー入力（頭文字等）のマッチング
+            let matchedSymbol = null;
+            
+            // 入力されたアルファベットに部分一致、または完全一致する選抜記号があるかスキャン
+            activeElementsPool.forEach(item => {
+                if (item.symbol.toLowerCase() === pressedString.toLowerCase()) {
+                    matchedSymbol = item.symbol;
+                }
+            });
+
+            // マッチする元素記号が見つかれば射撃！
+            if (matchedSymbol) {
+                pressKey(matchedSymbol);
+            }
+        });
+
+        function endGame(isClear) {
+            gameActive = false;
+            clearInterval(spawnInterval);
+            clearInterval(gameLoopInterval);
+
+            const screen = document.getElementById('gameover-screen');
+            const title = document.getElementById('gameover-title');
+            const desc = document.getElementById('gameover-desc');
+
+            if (isClear) {
+                title.innerText = "🎉 惑星防衛大成功！";
+                title.style.color = "#00ff66";
+                desc.innerHTML = "巨大元素コアの爆砕に成功した！<br>君の圧倒的な科学技術力に敬意を表する！<br>クリアコードは【 <b>ELEMENT456</b> 】だ！";
+            } else {
+                title.innerText = "💀 シールド大破 / ミッション失敗";
+                title.style.color = "#ff007f";
+                desc.innerText = "元素インベーダー、あるいは巨大ボスの接近を許してしまった。復習して再び防衛線を構築せよ！";
+            }
+            screen.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
