@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リカモンRPG - 試作版</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 5px;
+            color: #ff007f;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+            letter-spacing: 2px;
+        }
+
+        /* 🎮 バトル画面のコンテナ */
+        .battle-screen {
+            max-width: 600px;
+            width: 100%;
+            height: 400px;
+            background: #1a1a1a;
+            border: 3px solid #333;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 🌲 フィールドエリア（上半分） */
+        .field-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #0d0d11 0%, #1c131a 100%);
+            padding: 20px;
+        }
+
+        /* 📊 ステータスバー（ポケモン風） */
+        .status-panel {
+            background: rgba(30, 30, 35, 0.85);
+            border: 2px solid #00f0ff;
+            border-radius: 8px;
+            padding: 10px;
+            width: 220px;
+            position: absolute;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* 相手のステータス（右上） */
+        .enemy-status {
+            top: 20px;
+            right: 20px;
+            border-color: #ff007f;
+        }
+
+        /* 自分のステータス（左下） */
+        .player-status {
+            bottom: 20px;
+            left: 20px;
+            border-color: #00f0ff;
+        }
+
+        .status-name {
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .hp-bar-bg {
+            background: #444;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .hp-bar-fill {
+            background: #00ff66;
+            height: 100%;
+            width: 100%;
+            transition: width 0.4s ease;
+        }
+
+        /* 👾 リカモン表示位置 */
+        .monster-avatar {
+            position: absolute;
+            font-size: 60px;
+            text-align: center;
+            animation: float 3s ease-in-out infinite alternate;
+        }
+
+        .enemy-avatar {
+            top: 40px;
+            left: 80px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        /* 💬 メッセージとコマンドエリア（下半分） */
+        .ui-area {
+            height: 120px;
+            background: #111;
+            border-top: 3px solid #333;
+            display: flex;
+        }
+
+        /* テキストウィンドウ */
+        .message-box {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.5;
+            letter-spacing: 1px;
+            border-right: 2px solid #222;
+            display: flex;
+            align-items: center;
+        }
+
+        /* コマンドウインドウ（4分割） */
+        .command-box {
+            width: 220px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px;
+            background: #222;
+            padding: 2px;
+        }
+
+        .cmd-btn {
+            background: #16171e;
+            border: 1px solid #333;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cmd-btn:hover:not(:disabled) {
+            background: #251221;
+            border-color: #ff007f;
+            color: #ff007f;
+        }
+
+        .cmd-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* 🧠 クイズ選択肢モーダル（技を選ぶと飛び出る） */
+        .quiz-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .quiz-q {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+            color: #00f0ff;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .quiz-btn {
+            background: #222;
+            border: 2px solid #444;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quiz-btn:hover {
+            border-color: #ff007f;
+            background: #251221;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>リカモンバトル</h1>
+    <div style="color: #00f0ff; font-size: 13px; font-weight: bold; margin-bottom: 20px;">SECRET STAGE</div>
+
+    <div class="battle-screen">
+        
+        <div class="field-area">
+            <div class="status-panel enemy-status">
+                <div class="status-name">
+                    <span>野生のミトコンド</span>
+                    <span>Lv.35</span>
+                </div>
+                <div class="hp-bar-bg">
+                    <div class="hp-bar-fill" id="enemy-hp"></div>
+                </div>
+            </div>
+
+            <div class="monster-avatar enemy-avatar" id="enemy-sprite">🧬</div>
+
+            <div class="status-panel player-status">
+                <div class="status-name">
+                    <span>あなたの科学力</span>
+                    <span>Lv.99</span>
+                </div>
+                <div class="hp-bar-bg">
+                    <div class="hp-bar-fill" id="player-hp"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui-area">
+            <div class="message-box" id="msg-text">野生の ミトコンド が あらわれた！</div>
+            <div class="command-box">
+                <button class="cmd-btn" id="btn-fight" onclick="openQuiz()">たたかう</button>
+                <button class="cmd-btn" id="btn-catch" onclick="tryCatch()">つかまえる</button>
+                <button class="cmd-btn" id="btn-run" onclick="runAway()">にげる</button>
+                <button class="cmd-btn" id="btn-reset" onclick="resetBattle()" disabled>もう一度</button>
+            </div>
+        </div>
+
+        <div class="quiz-overlay" id="quiz-screen">
+            <div class="quiz-q" id="quiz-question">【理科クイズ】細胞内で酸素を使ってエネルギーを取り出す器官はどこ？</div>
+            <div class="quiz-options">
+                <button class="quiz-btn" onclick="handleQuizAnswer(true)">ミトコンドリア</button>
+                <button class="quiz-btn" onclick="handleQuizAnswer(false)">葉緑体</button>
+                <button class="quiz-btn" onclick="handleQuizAnswer(false)">液胞</button>
+                <button class="quiz-btn" onclick="handleQuizAnswer(false)">細胞壁</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // バトルデータ管理
+        let enemyMaxHp = 100;
+        let enemyHp = 100;
+        let isBattleOver = false;
+
+        // メッセージ変更の補助関数
+        function printMsg(text) {
+            document.getElementById('msg-text').innerText = text;
+        }
+
+        // 「たたかう」を押したとき、クイズ画面をオーバーレイ表示
+        function openQuiz() {
+            if (isBattleOver) return;
+            document.getElementById('quiz-screen').style.display = 'flex';
+        }
+
+        // クイズの解答処理
+        function handleQuizAnswer(isCorrect) {
+            document.getElementById('quiz-screen').style.display = 'none';
+
+            if (isCorrect) {
+                // 🟢 正解：大ダメージ！
+                enemyHp = Math.max(0, enemyHp - 40);
+                document.getElementById('enemy-hp').style.width = enemyHp + '%';
+                printMsg("効果は ばつぐんだ！ ミトコンドに 40の ダメージ！");
+                
+                // HPゲージの色を体力に合わせて変更
+                const hpBar = document.getElementById('enemy-hp');
+                if (enemyHp <= 20) {
+                    hpBar.style.backgroundColor = '#ff3333'; // 赤
+                } else if (enemyHp <= 50) {
+                    hpBar.style.backgroundColor = '#ffcc00'; // 黄
+                }
+
+                // 相手を倒したか判定
+                if (enemyHp <= 0) {
+                    setTimeout(() => {
+                        document.getElementById('enemy-sprite').style.opacity = '0';
+                        printMsg("野生の ミトコンド を たおした！ 科学の 勝利だ！");
+                        endBattle();
+                    }, 1500);
+                }
+            } else {
+                // 🔴 不正解：攻撃を外す
+                printMsg("しかし 技は はずれた！ 理科の知識が 足りない！");
+            }
+        }
+
+        // 「つかまえる」を押したときの処理
+        function tryCatch() {
+            if (isBattleOver) return;
+
+            printMsg("科学の力（リカボール）を 投げた！");
+            
+            // ポケモンらしく、HPが低いほど捕獲率が上がるロジック
+            // フルHPだと20%、残りHP20%以下だと80%の確率でゲット
+            setTimeout(() => {
+                let catchChance = (100 - enemyHp) + 20; 
+                let randomVal = Math.floor(Math.random() * 100);
+
+                if (randomVal < catchChance) {
+                    // 🎉 ゲット成功！
+                    document.getElementById('enemy-sprite').innerHTML = '⚽'; // ボールに変化
+                    printMsg("やったー！ ミトコンド を つかまえたぞ！ クリアコードは【 GRIT 】だ！");
+                    endBattle();
+                } else {
+                    // 💢 ゲット失敗
+                    printMsg("ああっ！ おしい！ リカモンが ボールから とびだした！");
+                }
+            }, 1200);
+        }
+
+        // 「にげる」を押したとき
+        function runAway() {
+            if (isBattleOver) return;
+            printMsg("うまく にげきれた！ ポータル画面に戻ろう。");
+            endBattle();
+        }
+
+        // バトル終了処理
+        function endBattle() {
+            isBattleOver = true;
+            document.getElementById('btn-fight').disabled = true;
+            document.getElementById('btn-catch').disabled = true;
+            document.getElementById('btn-run').disabled = true;
+            document.getElementById('btn-reset').disabled = false;
+        }
+
+        // リセットして再戦
+        function resetBattle() {
+            enemyHp = 100;
+            isBattleOver = false;
+            document.getElementById('enemy-hp').style.width = '100%';
+            document.getElementById('enemy-hp').style.backgroundColor = '#00ff66';
+            document.getElementById('enemy-sprite').style.opacity = '1';
+            document.getElementById('enemy-sprite').innerHTML = '🧬';
+            
+            document.getElementById('btn-fight').disabled = false;
+            document.getElementById('btn-catch').disabled = false;
+            document.getElementById('btn-run').disabled = false;
+            document.getElementById('btn-reset').disabled = true;
+            
+            printMsg("野生の ミトコンド が あらわれた！");
+        }
+    </script>
+</body>
+</html>
