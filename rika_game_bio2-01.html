@@ -37,294 +37,388 @@
             font-weight: bold;
         }
 
-        /* メインレイアウト（左に選択肢、右に仕分け箱） */
-        .game-container {
+        .container {
             display: flex;
-            gap: 30px;
-            max-width: 900px;
+            gap: 40px;
+            max-width: 1000px;
             width: 100%;
             justify-content: center;
-            flex-wrap: wrap;
+            align-items: flex-start;
         }
 
-        /* 選択肢（パーツ）エリア */
-        .parts-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background-color: #1a1a1a;
-            border: 2px solid #333;
-            padding: 20px;
-            border-radius: 8px;
-            min-width: 250px;
-        }
-
-        .parts-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #ccc;
-            margin-bottom: 10px;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            padding-bottom: 5px;
-        }
-
-        /* パーツカード */
-        .card {
-            background-color: #262626;
-            border: 2px solid #444;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-
-        /* 選択中のパーツの見た目 */
-        .card.selected {
-            border-color: #ff007f;
-            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
-            background-color: #331424;
-        }
-
-        /* すでに配置済みのパーツ（非表示にする用） */
-        .card.hidden {
-            opacity: 0.2;
-            pointer-events: none;
-        }
-
-        /* 仕分け箱エリア */
-        .boxes-container {
+        /* 左側：パーツエリア */
+        .parts-section {
             display: flex;
             flex-direction: column;
             gap: 20px;
-            flex: 1;
-            min-width: 300px;
+            width: 50%;
         }
 
-        .box {
-            background-color: #1a1a1a;
-            border: 2px dashed #00f0ff;
-            border-radius: 8px;
-            padding: 20px;
-            min-height: 120px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .box:hover {
-            background-color: #22252a;
-            border-style: solid;
-        }
-
-        .box-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #00f0ff;
-        }
-
-        /* 箱の中に入ったアイテムの見たみ */
-        .placed-item {
-            display: inline-block;
-            background-color: #ff007f;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            margin: 5px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .placed-item:hover {
-            background-color: #d00068;
-            text-decoration: line-through;
-        }
-
-        /* ボタンエリア */
-        .btn-container {
-            margin-top: 30px;
+        .parts-row {
             display: flex;
+            gap: 15px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .part-card {
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: grab;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s, opacity 0.2s, border-color 0.2s;
+        }
+
+        .part-card:hover {
+            border-color: #ff007f; /* ホバーでピンクに光る */
+        }
+
+        .part-card:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        /* 2回使い切ったら非表示にするスタイル */
+        .part-card.hidden {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .part-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        .svg-icon {
+            width: 120px;
+            height: 80px;
+        }
+
+        /* 右側：ターゲットエリア */
+        .target-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 45%;
+        }
+
+        .target-container {
+            position: relative;
+        }
+
+        .target-label {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #ff007f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ○△□の記号をラベルに添えてイカゲーム感を強調 */
+        #plant-label::before { content: "◯"; font-size: 14px; color: #00f0ff; }
+        #animal-label::before { content: "□"; font-size: 14px; color: #00f0ff; }
+
+        .target-box {
+            background: #1a1a1a;
+            border: 2px solid #ff007f; /* ピンクのフレーム */
+            border-radius: 12px;
+            width: 100%;
+            height: 240px;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .target-box.drag-over {
+            background: #2a1b25;
+            border-color: #00f0ff; /* ドラッグ中はシアンに光る */
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        /* 重ね合わせる細胞イラストのベース（初期は非表示） */
+        .cell-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        /* パーツが配置されたら表示 */
+        .cell-layer.show {
+            opacity: 1;
+        }
+
+        /* ボタンと結果表示エリア */
+        .action-area {
+            margin-top: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 15px;
         }
 
-        button {
-            padding: 12px 30px;
+        .button-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            color: white;
+            border: none;
+            padding: 14px 35px;
             font-size: 16px;
             font-weight: bold;
-            border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: background 0.2s, transform 0.1s;
+            letter-spacing: 1px;
         }
 
-        .submit-btn {
-            background-color: #ff007f;
-            color: white;
+        .btn:active {
+            transform: scale(0.98);
         }
-        .submit-btn:hover { background-color: #d00068; }
 
-        .reset-btn {
-            background-color: #444;
-            color: white;
+        /* 答え合わせ＝ゲーム参加 */
+        .btn-submit {
+            background: #ff007f;
         }
-        .reset-btn:hover { background-color: #555; }
 
-        /* 結果メッセージ */
+        .btn-submit:hover {
+            background: #e60072;
+        }
+
+        /* リスタ＝脱落・やり直し */
+        .btn-reset {
+            background: #333;
+            border: 1px solid #555;
+        }
+
+        .btn-reset:hover {
+            background: #444;
+        }
+
         #result-message {
-            margin-top: 25px;
             font-size: 20px;
             font-weight: bold;
             min-height: 30px;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(0,0,0,0.5);
         }
-        .correct { color: #00ff66; text-shadow: 0 0 10px rgba(0,255,102,0.4); }
-        .incorrect { color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.4); }
+        .correct { color: #00ff66; text-shadow: 0 0 10px rgba(0,255,102,0.5); }
+        .incorrect { color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.5); }
+
+        .hint-text {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
 
-    <h1>リカゲーム</h1>
-    <div class="subtitle">STAGE 2：細胞の構造を正しく仕分けよ</div>
+    <h1>「リカゲーム」試作版</h1>
+    <div class="subtitle">制限時間内に細胞を完成させよ。さもなくば脱落（誤答）となる。</div>
 
-    <div class="game-container">
-        <div class="parts-container">
-            <div class="parts-title">細胞のパーツ（クリックで選択）</div>
-            <div class="card" data-value="A">細胞壁</div>
-            <div class="card" data-value="B">葉緑体</div>
-            <div class="card" data-value="C">液胞</div>
-            <div class="card" data-value="D">細胞膜</div>
-            <div class="card" data-value="E">核</div>
-            <div class="card" data-value="F">細胞質</div>
+    <div class="container">
+        <div class="parts-section">
+            <div class="parts-row">
+                <div class="part-card" draggable="true" id="part-1">
+                    <div class="part-title">① 細胞膜</div>
+                    <svg class="svg-icon" viewBox="0 0 120 80">
+                        <rect x="10" y="10" width="100" height="60" rx="15" fill="none" stroke="#ff007f" stroke-width="4"/>
+                    </svg>
+                </div>
+                <div class="part-card" draggable="true" id="part-2">
+                    <div class="part-title">② 細胞壁</div>
+                    <svg class="svg-icon" viewBox="0 0 120 80">
+                        <rect x="5" y="5" width="110" height="70" rx="15" fill="none" stroke="#00f0ff" stroke-width="5"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="parts-row">
+                <div class="part-card" draggable="true" id="part-3">
+                    <div class="part-title">③ 核</div>
+                    <svg class="svg-icon" viewBox="0 0 120 80">
+                        <circle cx="60" cy="40" r="18" fill="#d8b4fe" stroke="#a855f7" stroke-width="2" stroke-dasharray="1 2"/>
+                    </svg>
+                </div>
+                <div class="part-card" draggable="true" id="part-4">
+                    <div class="part-title">④ 液胞</div>
+                    <svg class="svg-icon" viewBox="0 0 120 80">
+                        <path d="M20 30 Q40 20, 70 25 Q100 30, 90 50 Q60 65, 40 55 Z" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="part-card" draggable="true" id="part-5">
+                    <div class="part-title">⑤ 葉緑体</div>
+                    <svg class="svg-icon" viewBox="0 0 120 80">
+                        <ellipse cx="40" cy="30" rx="8" ry="4" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(15, 40, 30)"/>
+                        <ellipse cx="70" cy="25" rx="8" ry="4" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(-10, 70, 25)"/>
+                    </svg>
+                </div>
+            </div>
         </div>
 
-        <div class="boxes-container">
-            <div class="box" id="plant-box" onclick="placeItem('plant-box')">
-                <div class="box-title">【植物細胞】にしか見られないもの</div>
-                <div class="box-content" id="plant-box-content"></div>
+        <div class="target-section">
+            
+            <div class="target-container">
+                <div class="target-label" id="plant-label">植物細胞</div>
+                <div class="target-box" id="plant-box">
+                    <svg class="cell-layer layer-part-2" viewBox="0 0 350 240">
+                        <rect x="15" y="15" width="320" height="210" rx="25" fill="none" stroke="#00f0ff" stroke-width="6"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-1" viewBox="0 0 350 240">
+                        <rect x="25" y="25" width="300" height="190" rx="20" fill="#222" stroke="#ff007f" stroke-width="4"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-4" viewBox="0 0 350 240">
+                        <path d="M40 60 Q100 30, 180 40 Q250 50, 240 100 Q150 120, 80 100 Z" fill="#1e3a8a" opacity="0.6" stroke="#38bdf8" stroke-width="2"/>
+                        <path d="M80 150 Q180 175, 290 150 Q310 190, 240 200 Q140 200, 70 185 Z" fill="#1e3a8a" opacity="0.6" stroke="#38bdf8" stroke-width="2"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-5" viewBox="0 0 350 240">
+                        <ellipse cx="300" cy="65" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(30, 300, 65)"/>
+                        <ellipse cx="285" cy="90" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(-15, 285, 90)"/>
+                        <ellipse cx="55" cy="160" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(45, 55, 160)"/>
+                        <ellipse cx="85" cy="150" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(-10, 85, 150)"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-3" viewBox="0 0 350 240">
+                        <circle cx="210" cy="115" r="26" fill="#d8b4fe" stroke="#a855f7" stroke-width="2" stroke-dasharray="2 3"/>
+                    </svg>
+                </div>
+                <div class="hint-text">※枠内をクリックでパーツ回収</div>
             </div>
 
-            <div class="box" id="animal-box" onclick="placeItem('animal-box')">
-                <div class="box-title">【植物・動物】両方に見られるもの</div>
-                <div class="box-content" id="animal-box-content"></div>
+            <div class="target-container">
+                <div class="target-label" id="animal-label">動物細胞</div>
+                <div class="target-box" id="animal-box">
+                    <svg class="cell-layer layer-part-2" viewBox="0 0 350 240">
+                        <rect x="15" y="15" width="320" height="210" rx="25" fill="none" stroke="#00f0ff" stroke-width="6"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-1" viewBox="0 0 350 240">
+                        <rect x="25" y="25" width="300" height="190" rx="20" fill="#222" stroke="#ff007f" stroke-width="4"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-4" viewBox="0 0 350 240">
+                        <path d="M40 60 Q100 30, 180 40 Q250 50, 240 100 Q150 120, 80 100 Z" fill="#1e3a8a" opacity="0.6" stroke="#38bdf8" stroke-width="2"/>
+                        <path d="M80 150 Q180 175, 290 150 Q310 190, 240 200 Q140 200, 70 185 Z" fill="#1e3a8a" opacity="0.6" stroke="#38bdf8" stroke-width="2"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-5" viewBox="0 0 350 240">
+                        <ellipse cx="300" cy="65" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(30, 300, 65)"/>
+                        <ellipse cx="285" cy="90" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(-15, 285, 90)"/>
+                        <ellipse cx="55" cy="160" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(45, 55, 160)"/>
+                        <ellipse cx="85" cy="150" rx="14" ry="7" fill="#86efac" stroke="#16a34a" stroke-width="2" transform="rotate(-10, 85, 150)"/>
+                    </svg>
+                    <svg class="cell-layer layer-part-3" viewBox="0 0 350 240">
+                        <circle cx="210" cy="115" r="26" fill="#d8b4fe" stroke="#a855f7" stroke-width="2" stroke-dasharray="2 3"/>
+                    </svg>
+                </div>
+                <div class="hint-text">※枠内をクリックでパーツ回収</div>
             </div>
+
         </div>
     </div>
 
-    <div class="btn-container">
-        <button class="submit-btn" onclick="checkAnswers()">提出する</button>
-        <button class="reset-btn" onclick="resetQuiz()">リセット</button>
+    <div class="action-area">
+        <div class="button-group">
+            <button class="btn btn-submit" onclick="checkAnswers()">答え合わせ</button>
+            <button class="btn btn-reset" onclick="resetQuiz()">リセット</button>
+        </div>
+        <div id="result-message"></div>
     </div>
-
-    <div id="result-message"></div>
 
     <script>
-        // 正解の定義
         const GOAL = {
-            'plant-box': ['A', 'B', 'C'],
-            'animal-box': ['D', 'E', 'F']
+            'plant-box': ['part-1', 'part-2', 'part-3', 'part-4', 'part-5'],
+            'animal-box': ['part-1', 'part-3']
         };
 
-        // 現在のプレイヤーの解答状態
         let currentAnswers = {
             'plant-box': [],
             'animal-box': []
         };
 
-        // 現在選択されているパーツの値 (A〜F)
-        let selectedPartValue = null;
-        let selectedElement = null;
-
-        // すべてのパーツカードにクリックイベントを設定
-        const cards = document.querySelectorAll('.card');
+        const cards = document.querySelectorAll('.part-card');
         cards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                // すでに配置済みのカードなら何もしない
-                if(card.classList.contains('hidden')) return;
-
-                // すでに他のカードが選択されていれば解除
-                if (selectedElement) {
-                    selectedElement.classList.remove('selected');
-                }
-
-                // 新しく選択されたカードをセット
-                selectedPartValue = card.getAttribute('data-value');
-                selectedElement = card;
-                card.classList.add('selected');
-                
-                // クリックの連鎖を防ぐ
-                e.stopPropagation();
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
             });
         });
 
-        // 箱をクリックしたときに選択中のアイテムを配置する処理
-        function placeItem(boxId) {
-            if (!selectedPartValue) {
-                alert("先に配置したいパーツを選択してください。");
-                return;
-            }
-
-            // すでに同じ箱に入っていないかチェック
-            if (currentAnswers[boxId].includes(selectedPartValue)) {
-                alert("そのパーツは既に配置されています。");
-                return;
-            }
-
-            // 解答データに追加
-            currentAnswers[boxId].push(selectedPartValue);
-
-            // 画面（箱の中身）を更新
-            renderBox(boxId);
-
-            // 選択元になったカードをグレーアウト（配置済み）にする
-            selectedElement.classList.remove('selected');
-            selectedElement.classList.add('hidden');
-
-            // 選択状態をリセット
-            selectedPartValue = null;
-            selectedElement = null;
-        }
-
-        // 箱の中身を描画する処理
-        function renderBox(boxId) {
-            const container = document.getElementById(`${boxId}-content`);
-            container.innerHTML = ''; // 一旦クリア
-
-            currentAnswers[boxId].forEach(val => {
-                // 値から文字（パーツ名）を取得
-                const cardText = document.querySelector(`.card[data-value="${val}"]`).innerText;
-                
-                // 箱の中に表示するバッジ要素を作成
-                const itemEl = document.createElement('span');
-                itemEl.className = 'placed-item';
-                itemEl.innerText = cardText + " ✖";
-                
-                // バッジをクリックしたらキャンセル（取り消し）できるようにする
-                itemEl.onclick = (e) => {
-                    removeItem(boxId, val);
-                    e.stopPropagation(); // 箱自体のクリックイベントを発動させない
-                };
-
-                container.appendChild(itemEl);
+        const boxes = document.querySelectorAll('.target-box');
+        boxes.forEach(box => {
+            box.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                box.classList.add('drag-over');
             });
-        }
 
-        // 配置したアイテムを取り消す（元に戻す）処理
-        function removeItem(boxId, val) {
-            // 配列から削除
-            currentAnswers[boxId] = currentAnswers[boxId].filter(item => item !== val);
-            
-            // 箱の表示を更新
-            renderBox(boxId);
+            box.addEventListener('dragleave', () => {
+                box.classList.remove('drag-over');
+            });
 
-            // 元のカードのグレーアウトを解除する
-            const originalCard = document.querySelector(`.card[data-value="${val}"]`);
-            if (originalCard) {
-                originalCard.classList.remove('hidden');
+            box.addEventListener('drop', (e) => {
+                e.preventDefault();
+                box.classList.remove('drag-over');
+                
+                const id = e.dataTransfer.getData('text/plain');
+                if (!id) return;
+
+                const boxId = box.id;
+
+                if (!currentAnswers[boxId].includes(id)) {
+                    currentAnswers[boxId].push(id);
+                    
+                    const layer = box.querySelector(`.layer-${id}`);
+                    if (layer) layer.classList.add('show');
+
+                    updateCardVisibility(id);
+                    document.getElementById('result-message').innerText = '';
+                }
+            });
+
+            box.addEventListener('click', (e) => {
+                if (currentAnswers[box.id].length === 0) return;
+
+                const removedId = currentAnswers[box.id].pop();
+                
+                const layer = box.querySelector(`.layer-${removedId}`);
+                if (layer) layer.classList.remove('show');
+
+                updateCardVisibility(removedId);
+                document.getElementById('result-message').innerText = '';
+            });
+        });
+
+        function updateCardVisibility(cardId) {
+            let count = 0;
+            if (currentAnswers['plant-box'].includes(cardId)) count++;
+            if (currentAnswers['animal-box'].includes(cardId)) count++;
+
+            const cardElement = document.getElementById(cardId);
+            if (cardElement) {
+                if (count >= 2) {
+                    cardElement.classList.add('hidden');
+                } else {
+                    cardElement.classList.remove('hidden');
+                }
             }
         }
 
-        // 答え合わせの処理
         function checkAnswers() {
             const resultEl = document.getElementById('result-message');
             
@@ -340,29 +434,19 @@
             }
         }
 
-        // 配列の中身が一致しているか判定する補助関数
         function isMatch(arr1, arr2) {
             if (arr1.length !== arr2.length) return false;
             return [...arr1].sort().every((val, index) => val === [...arr2].sort()[index]);
         }
 
-        // リセット処理
         function resetQuiz() {
             currentAnswers['plant-box'] = [];
             currentAnswers['animal-box'] = [];
 
-            // 箱の中身を空にする
-            renderBox('plant-box');
-            renderBox('animal-box');
+            const layers = document.querySelectorAll('.cell-layer');
+            layers.forEach(layer => layer.classList.remove('show'));
 
-            // カードの非表示・選択状態をすべて元に戻す
-            cards.forEach(card => {
-                card.classList.remove('hidden');
-                card.classList.remove('selected');
-            });
-
-            selectedPartValue = null;
-            selectedElement = null;
+            cards.forEach(card => card.classList.remove('hidden'));
 
             document.getElementById('result-message').innerText = '';
         }
