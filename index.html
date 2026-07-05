@@ -7,14 +7,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap');
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #0b0c10; /* 深い黒の背景 */
+            background-color: #0b0c10;
             color: #ffffff;
             font-family: 'Noto Sans JP', sans-serif;
             display: flex;
@@ -23,103 +18,70 @@
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            position: relative;
         }
 
-        /* 背景に薄く○△□の幾何学模様を配置 */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.02) 50%, transparent 50%),
-                linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.01) 45%, rgba(255, 255, 255, 0.01) 55%, transparent 55%);
-            background-size: 60px 60px;
-            z-index: -1;
-        }
+        .container { text-align: center; max-width: 600px; width: 100%; }
+        h1 { font-size: 3.5rem; font-weight: 900; letter-spacing: 6px; margin-bottom: 5px; }
+        .squid-symbols { font-size: 2.2rem; margin-bottom: 25px; letter-spacing: 15px; padding-left: 15px; }
+        .circle { color: #ffffff; } .triangle, .square { color: #ff007f; }
+        .subtitle { font-size: 1.1rem; color: #03dac6; letter-spacing: 3px; margin-bottom: 40px; font-weight: 700; }
 
-        .container {
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
+        /* パスワード入力エリア */
+        .code-zone {
+            background: #16171e;
+            border: 2px dashed #ff007f;
+            padding: 20px;
+            margin-bottom: 40px;
         }
-
-        /* メインタイトル */
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #ffffff;
-            letter-spacing: 6px;
-            margin-bottom: 5px;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        /* イカゲームの象徴的な「○△□」マーク */
-        .squid-symbols {
-            font-size: 2.2rem;
-            margin-bottom: 25px;
-            letter-spacing: 15px;
-            padding-left: 15px; /* 中央揃えの微調整 */
-        }
-        .circle { color: #ffffff; }       /* ○ (白) */
-        .triangle { color: #ff007f; }     /* △ (ショッキングピンク) */
-        .square { color: #ff007f; }       /* □ (ショッキングピンク) */
-
-        /* サブタイトル（プレイヤーのジャージをイメージしたミントグリーン） */
-        .subtitle {
+        .code-input {
+            background: #0b0c10;
+            border: 2px solid #2a2b36;
+            color: #fff;
+            padding: 10px;
             font-size: 1.1rem;
-            color: #03dac6; 
-            letter-spacing: 3px;
-            margin-bottom: 50px;
-            font-weight: 700;
-            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: 2px;
+            width: 70%;
+            text-transform: uppercase; /* 小文字で入力されても大文字に変換 */
+        }
+        .code-btn {
+            background: #ff007f;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* 証（アワード）の表示エリア（最初は隠しておく） */
+        .award-box {
+            display: none;
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            border: 4px solid #03dac6;
+            padding: 30px;
+            margin-bottom: 40px;
+            animation: flash 1s ease infinite alternate;
+        }
+        .award-title { font-size: 1.8rem; color: #fff; margin-bottom: 10px; }
+        .award-desc { color: #03dac6; font-weight: bold; }
+
+        /* アニメーション演出 */
+        @keyframes flash {
+            0% { box-shadow: 0 0 10px #03dac6; }
+            100% { box-shadow: 0 0 25px #ff007f; }
         }
 
         /* ゲームリスト */
-        .game-list {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* ゲーム選択ボタン（招待状や管理官のマスクをイメージした直線的デザイン） */
+        .game-list { display: flex; flex-direction: column; gap: 20px; }
         .game-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 22px 30px;
-            background-color: #16171e;
-            border: 3px solid #2a2b36;
-            text-decoration: none;
-            color: #ffffff;
-            font-size: 1.2rem;
-            font-weight: 700;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 22px 30px; background-color: #16171e; border: 3px solid #2a2b36;
+            text-decoration: none; color: #ffffff; font-size: 1.2rem; font-weight: 700;
             transition: all 0.3s ease;
-            cursor: pointer;
         }
-
-        /* ホバー時にピンクのネオン発光効果 */
-        .game-card:hover {
-            border-color: #ff007f;
-            background-color: #251221;
-            transform: translateY(-3px);
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
-        }
-
-        /* ボタン右側のマーク */
-        .card-symbol {
-            color: #ff007f;
-            font-size: 1.4rem;
-            font-weight: 900;
-        }
-
-        /* フッター */
-        footer {
-            margin-top: 60px;
-            font-size: 0.75rem;
-            color: #444655;
-            letter-spacing: 2px;
-        }
+        .game-card:hover { border-color: #ff007f; background-color: #251221; transform: translateY(-3px); }
+        .card-symbol { color: #ff007f; font-size: 1.4rem; }
     </style>
 </head>
 <body>
@@ -131,27 +93,54 @@
         </div>
         <div class="subtitle">生存をかけたミニゲームを選択せよ</div>
 
+        <div class="award-box" id="awardBox">
+            <div class="award-title" id="awardTitle">🏆 証のタイトル</div>
+            <div class="award-desc" id="awardDesc">証の説明文</div>
+        </div>
+
+        <div class="code-zone">
+            <p style="margin-bottom: 10px; font-size: 0.9rem; color: #ccc;">クリアコードを入力して【証】を解除せよ</p>
+            <input type="text" id="codeInput" class="code-input" placeholder="例: RIKA-CLEAR">
+            <button class="code-btn" onclick="checkCode()">送信</button>
+        </div>
+
         <div class="game-list">
             <a href="game1/" class="game-card">
                 <span>第1ゲーム：だるまさんがころんだ</span>
                 <span class="card-symbol">○</span>
             </a>
-            
-            <a href="game2/" class="game-card">
-                <span>第2ゲーム：型抜き</span>
-                <span class="card-symbol">△</span>
-            </a>
-
-            <a href="game3/" class="game-card">
-                <span>第3ゲーム：綱引き</span>
-                <span class="card-symbol">□</span>
-            </a>
         </div>
-
-        <footer>
-            © 456 RIKA GAME. ALL RIGHTS RESERVED.
-        </footer>
     </div>
 
+    <script>
+        function checkCode() {
+            // 入力された文字を取得（大文字に統一、前後の空白削除）
+            const input = document.getElementById("codeInput").value.trim().toUpperCase();
+            const awardBox = document.getElementById("awardBox");
+            const awardTitle = document.getElementById("awardTitle");
+            const awardDesc = document.getElementById("awardDesc");
+
+            // コードに応じた判定
+            if (input === "RIKA-CLEAR") {
+                awardBox.style.display = "block";
+                awardTitle.innerText = "🏅 生存者の証";
+                awardDesc.innerText = "あなたは過酷なリカゲームを生き延びたことを証明します。";
+            } 
+            else if (input === "SPEED-STER") {
+                awardBox.style.display = "block";
+                awardTitle.innerText = "⚡ 韋駄天の証（スピードスター）";
+                awardDesc.innerText = "驚異的な速度（60秒以内）でゲームを制圧した強者に贈られる証。";
+            } 
+            else if (input === "PERFECT-GOD") {
+                awardBox.style.display = "block";
+                awardTitle.innerText = "👑 神の領域の証（パーフェクト）";
+                awardDesc.innerText = "ノーミスかつ迅速に完全勝利を収めた、全プレイヤーの頂点たる証。";
+            } 
+            else {
+                alert("無効なコードです。もう一度確認してください。");
+                awardBox.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>
