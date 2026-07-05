@@ -153,7 +153,7 @@
 
         .secret-code-field {
             background: #20222b;
-            border: 2px solid #3f4257;
+            border: 2px solid #333;
             color: #ffffff;
             padding: 10px 15px;
             font-size: 16px;
@@ -240,8 +240,8 @@
     </div>
 
     <script>
-        // 設定したいシークレットコード（※自由に変更してください）
-        const CORRECT_CODE = "526"; 
+        // 💡 パスワードを「GRIT」に設定しました！大文字小文字を区別します
+        const CORRECT_CODE = "GRIT"; 
         let isStage4Unlocked = false;
 
         function verifySecretCode() {
@@ -254,7 +254,6 @@
                     return;
                 }
 
-                // 🔓 ロック解除の演出と書き換え
                 isStage4Unlocked = true;
                 
                 const card = document.getElementById('stage4-card');
@@ -264,10 +263,10 @@
                 card.classList.remove('locked');
                 card.classList.add('unlocked');
                 
-                // リンク先（将来作るファイル名など）をセット
-                card.href = "rika_game_secret.html"; 
+                // 💡 リンク先を rika_game_rikamon.html に完全一致させました！
+                card.href = "rika_game_rikamon.html"; 
                 
-                title.innerText = "STAGE 4：極限サバイバル（シークレット解放）";
+                title.innerText = "STAGE 4：リカモンバトル（ボーナスステージ）";
                 title.style.color = "#00ff66";
                 
                 icon.innerHTML = "✨";
