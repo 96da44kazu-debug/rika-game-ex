@@ -43,6 +43,19 @@
             width: 100%;
         }
 
+        /* 📋 バージョン表記のスタイル */
+        .version-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: #03dac6;
+            background-color: rgba(3, 218, 198, 0.15);
+            border: 1px solid #03dac6;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
         h1 {
             font-size: 3.5rem;
             font-weight: 900;
@@ -96,42 +109,97 @@
             box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
         }
 
-        /* 🔒 ロック中カード専用のスタイル */
         .game-card.locked {
             opacity: 0.35;
             border: 3px dashed #444;
             background-color: #0d0e12;
             cursor: not-allowed;
         }
-
-        /* 🔓 ロック解除時のネオン風エフェクト */
-        .game-card.unlocked {
-            border-color: #00ff66 !important;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
-            background-color: #0e2116;
-            animation: unlockGlow 1s ease-out;
+        .game-card.locked:hover {
+            transform: none;
+            border-color: #555;
+            box-shadow: none;
         }
 
-        @keyframes unlockGlow {
-            0% { transform: scale(1); border-color: #444; }
-            50% { transform: scale(1.03); border-color: #00ff66; box-shadow: 0 0 30px #00ff66; }
-            100% { transform: scale(1); }
+        .card-symbol { color: #ff007f; font-size: 1.3rem; font-weight: 900; }
+        .locked-symbol { color: #888; font-size: 1.2rem; }
+
+        /* 🗃️ コレクションアルバム */
+        .collection-section {
+            margin-top: 40px;
+            background: #111217;
+            border: 1px solid #2a2b36;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
         }
 
-        .card-symbol {
-            color: #ff007f;
-            font-size: 1.3rem;
-            font-weight: 900;
+        .collection-section h3 {
+            font-size: 1.1rem;
+            color: #03dac6;
+            margin-bottom: 15px;
+            text-align: center;
+            letter-spacing: 1px;
         }
 
-        .locked-symbol {
-            color: #888;
-            font-size: 1.2rem;
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
 
-        /* 🔑 コード入力エリアのスタイル */
+        /* 🎴 リカモンカードの基本デザイン */
+        .rikamon-card {
+            background: #1f2029;
+            border: 2px solid #333;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 3 / 4; /* ポケモンカード風の比率 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 未獲得時：絵文字のプレースホルダーを表示 */
+        .card-placeholder { font-size: 32px; filter: grayscale(100%); opacity: 0.15; }
+        .card-name { font-size: 11px; font-weight: bold; color: #444; margin-top: 5px; }
+
+        /* 💾 獲得時：画像（rikamon-card/）を表示し、モノクロ解除 */
+        .rikamon-card img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            display: none; /* 初期は非表示 */
+            cursor: pointer;
+        }
+
+        .rikamon-card.owned img {
+            display: block; /* 獲得したら画像を表示 */
+            animation: cardGet 0.6s ease-out;
+        }
+
+        .rikamon-card.owned {
+            border-color: #00f0ff;
+            box-shadow: 0 4px 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .rikamon-card.owned.shiny-card {
+            border-color: gold;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+
+        @keyframes cardGet {
+            0% { transform: scale(0.6) rotate(-10deg); filter: brightness(3); }
+            100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+
+        /* 🔑 コード入力エリア */
         .code-input-section {
-            margin-top: 45px;
+            margin-top: 30px;
             background: #111217;
             border: 1px solid #2a2b36;
             padding: 20px;
@@ -140,16 +208,12 @@
 
         .code-input-section h3 {
             font-size: 1rem;
-            color: #03dac6;
+            color: #ff007f;
             margin-bottom: 12px;
             letter-spacing: 1px;
         }
 
-        .input-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
+        .input-group { display: flex; gap: 10px; justify-content: center; }
 
         .secret-code-field {
             background: #20222b;
@@ -164,10 +228,7 @@
             width: 60%;
             outline: none;
         }
-
-        .secret-code-field:focus {
-            border-color: #ff007f;
-        }
+        .secret-code-field:focus { border-color: #ff007f; }
 
         .code-submit-btn {
             background: #ff007f;
@@ -180,22 +241,17 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+        .code-submit-btn:hover { background: #e60072; }
 
-        .code-submit-btn:hover {
-            background: #e60072;
-        }
-
-        footer {
-            margin-top: 40px;
-            font-size: 0.75rem;
-            color: #444655;
-            letter-spacing: 2px;
-        }
+        footer { margin-top: 40px; font-size: 0.75rem; color: #444655; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
     <div class="container">
+        <!-- 📋 システムバージョンを上部に表示 -->
+        <div class="version-badge">SYSTEM VERSION：v2.4.0</div>
+
         <h1>リカゲーム</h1>
         <div class="squid-symbols">
             <span class="circle">○</span><span class="triangle">△</span><span class="square">□</span>
@@ -203,34 +259,61 @@
         <div class="subtitle">生存をかけたミニゲームを選択せよ</div>
 
         <div class="game-list">
-            
+            <!-- STAGE 1〜3 -->
             <a href="rika_game_bio2-01.html" class="game-card">
                 <span>STAGE 1：細胞の構造仕分け</span>
                 <span class="card-symbol">○</span>
             </a>
-            
             <a href="rika_game_bio2-02.html" class="game-card">
                 <span>STAGE 2：単細胞生物の物質出入</span>
                 <span class="card-symbol">△</span>
             </a>
-
             <a href="rika_game_quiz.html" class="game-card">
                 <span>STAGE 3：理科一問一答（全526問）</span>
                 <span class="card-symbol">□</span>
             </a>
-
-            <a href="#" class="game-card locked" id="stage4-card" onclick="handleStage4Click(event)">
-                <span id="stage4-title">STAGE 4：？？？？？？（ロック中）</span>
-                <span class="locked-symbol" id="stage4-icon">🔒</span>
+            <a href="rika_game_rikamon.html" class="game-card">
+                <span>STAGE 4：リカモンバトル（ボーナス）</span>
+                <span class="card-symbol" style="color:#00ff66;">✨</span>
             </a>
 
+            <!-- 🔒 続報お楽しみ枠：STAGE 5（完全ロック、次への期待を煽る） -->
+            <a href="#" class="game-card locked" onclick="alert('【通信エラー】STAGE 5 は現在ロックされている。運営からのアップデート続報を待て。'); return false;">
+                <span>STAGE 5：？？？？？？（次期アップデート対象）</span>
+                <span class="locked-symbol">🔒</span>
+            </a>
         </div>
 
+        <!-- 🔑 コード入力エリア -->
         <div class="code-input-section">
-            <h3>🔑 クリアコードを入力してシークレットを解除せよ</h3>
+            <h3>🔑 捕獲コードを入力してリカモンカードを獲得せよ</h3>
             <div class="input-group">
                 <input type="text" class="secret-code-field" id="secretCodeInput" placeholder="CODEを入力" autocomplete="off">
                 <button class="code-submit-btn" onclick="verifySecretCode()">送信</button>
+            </div>
+        </div>
+
+        <!-- 🗃️ リカモンカード図鑑コレクション（画像表示・保存対応版） -->
+        <div class="collection-section">
+            <h3>🎴 リカモンカードアルバム（長押しや右クリックで画像保存可能）</h3>
+            <div class="card-grid">
+                <div class="rikamon-card" id="card-MITO"><div class="card-placeholder">🧬</div><div class="card-name">ミトコンド</div><img src="rikamon_card/MITO.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-ELODEA"><div class="card-placeholder">🌿</div><div class="card-name">オオカナダ</div><img src="rikamon_card/ELODEA.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-PARAM"><div class="card-placeholder">🩴</div><div class="card-name">ゾウリムシアン</div><img src="rikamon_card/PARAM.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-AMMON"><div class="card-placeholder">🐚</div><div class="card-name">アンモナイトス</div><img src="rikamon_card/AMMON.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-MAGNET"><div class="card-placeholder">🧲</div><div class="card-name">ハエナワル</div><img src="rikamon_card/MAGNET.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-QUARTZ"><div class="card-sprite card-placeholder">💎</div><div class="card-name">セキエイノドン</div><img src="rikamon_card/QUARTZ.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-HEMO"><div class="card-placeholder">🔴</div><div class="card-name">ヘモグロビンゴ</div><img src="rikamon_card/HEMO.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-MAGMA"><div class="card-placeholder">🌋</div><div class="card-name">マグマドラン</div><img src="rikamon_card/MAGMA.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-NH3GAS"><div class="card-placeholder">💨</div><div class="card-name">アンモニアデス</div><img src="rikamon_card/NH3GAS.png" title="長押し・右クリックで保存"></div>
+                <div class="rikamon-card" id="card-GRAVITY"><div class="card-placeholder">🍎</div><div class="card-name">ニュートンG</div><img src="rikamon_card/GRAVITY.png" title="長押し・右クリックで保存"></div>
+                
+                <!-- 👑 特別枠：幻の色違いカード -->
+                <div class="rikamon-card" id="card-SHINY456" style="grid-column: span 3; margin-top: 5px; aspect-ratio: auto; height: 110px;">
+                    <div class="card-placeholder">✨👑★</div>
+                    <div class="card-name">幻の色違いリカモン</div>
+                    <img src="rikamon_card/SHINY456.png" title="長押し・右クリックで保存">
+                </div>
             </div>
         </div>
 
@@ -240,50 +323,34 @@
     </div>
 
     <script>
-        // 💡 パスワードを「GRIT」に設定しました！大文字小文字を区別します
-        const CORRECT_CODE = "GRIT"; 
-        let isStage4Unlocked = false;
+        const VALID_CODES = ["MITO", "ELODEA", "PARAM", "AMMON", "MAGNET", "QUARTZ", "HEMO", "MAGMA", "NH3GAS", "GRAVITY", "SHINY456"];
 
         function verifySecretCode() {
             const inputField = document.getElementById('secretCodeInput');
-            const userCode = inputField.value.trim();
+            const userCode = inputField.value.trim().toUpperCase();
 
-            if (userCode === CORRECT_CODE) {
-                if (isStage4Unlocked) {
-                    alert("ステージ4は既に解放されている。");
+            if (VALID_CODES.includes(userCode)) {
+                const cardElement = document.getElementById('card-' + userCode);
+                
+                if (cardElement.classList.contains('owned')) {
+                    alert("⚠️ そのカードはすでに獲得し、ダウンロード可能になっているぞ。");
+                    inputField.value = "";
                     return;
                 }
 
-                isStage4Unlocked = true;
+                // 🎉 カード画像表示＆アクティブ化
+                cardElement.classList.add('owned');
                 
-                const card = document.getElementById('stage4-card');
-                const title = document.getElementById('stage4-title');
-                const icon = document.getElementById('stage4-icon');
-
-                card.classList.remove('locked');
-                card.classList.add('unlocked');
+                if (userCode === "SHINY456") {
+                    cardElement.classList.add('shiny-card');
+                    alert("✨👑 奇跡発生！！ 👑✨\n幻の色違いリカモンカードのデータを復元した！\n画像を長押し、または右クリックして端末に保存せよ！");
+                } else {
+                    alert("🟢 捕獲コード認証完了！\nリカモンカードのデータを受信したぞ！\n画像を長押し、または右クリックして端末に保存可能だ。");
+                }
                 
-                // 💡 リンク先を rika_game_rikamon.html に完全一致させました！
-                card.href = "rika_game_rikamon.html"; 
-                
-                title.innerText = "STAGE 4：リカモンバトル（ボーナスステージ）";
-                title.style.color = "#00ff66";
-                
-                icon.innerHTML = "✨";
-                icon.className = "";
-                icon.style.fontSize = "1.3rem";
-
-                alert("🟢 コード認証成功。シークレットステージが解放された。");
                 inputField.value = "";
             } else {
-                alert("🔴 コードが違う。やり直せ。");
-            }
-        }
-
-        function handleStage4Click(e) {
-            if (!isStage4Unlocked) {
-                e.preventDefault();
-                alert('このステージは現在ロックされている。各ゲームをクリアして手に入るコードを入力せよ。');
+                alert("🔴 無効なコードだ。正しいコードを入力するか、リカモンを捕まえ直してこい。");
             }
         }
     </script>

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>リカモンRPG - 試作版</title>
+    <title>リカモンRPG - 連携究極版</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #121212;
+            background-color: #0b0c10;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -28,11 +28,10 @@
             letter-spacing: 2px;
         }
 
-        /* 🎮 バトル画面のコンテナ */
         .battle-screen {
             max-width: 600px;
             width: 100%;
-            height: 400px;
+            height: 420px;
             background: #1a1a1a;
             border: 3px solid #333;
             border-radius: 12px;
@@ -43,7 +42,6 @@
             flex-direction: column;
         }
 
-        /* 🌲 フィールドエリア（上半分） */
         .field-area {
             flex: 1;
             position: relative;
@@ -51,30 +49,18 @@
             padding: 20px;
         }
 
-        /* 📊 ステータスバー（ポケモン風） */
         .status-panel {
-            background: rgba(30, 30, 35, 0.85);
+            background: rgba(30, 30, 35, 0.9);
             border: 2px solid #00f0ff;
             border-radius: 8px;
-            padding: 10px;
-            width: 220px;
+            padding: 8px 12px;
+            width: 230px;
             position: absolute;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        /* 相手のステータス（右上） */
-        .enemy-status {
-            top: 20px;
-            right: 20px;
-            border-color: #ff007f;
-        }
-
-        /* 自分のステータス（左下） */
-        .player-status {
-            bottom: 20px;
-            left: 20px;
-            border-color: #00f0ff;
-        }
+        .enemy-status { top: 20px; right: 20px; border-color: #ff007f; }
+        .player-status { bottom: 20px; left: 20px; border-color: #00f0ff; }
 
         .status-name {
             font-size: 14px;
@@ -96,28 +82,43 @@
             background: #00ff66;
             height: 100%;
             width: 100%;
-            transition: width 0.4s ease;
+            transition: width 0.4s ease, background-color 0.3s;
         }
 
-        /* 👾 リカモン表示位置 */
         .monster-avatar {
             position: absolute;
-            font-size: 60px;
+            font-size: 65px;
             text-align: center;
-            animation: float 3s ease-in-out infinite alternate;
+            transition: all 0.5s ease;
         }
 
         .enemy-avatar {
-            top: 40px;
+            top: 45px;
             left: 80px;
+            animation: float 2.5s ease-in-out infinite alternate;
         }
 
         @keyframes float {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-10px); }
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-12px) scale(1.02); }
         }
 
-        /* 💬 メッセージとコマンドエリア（下半分） */
+        .shiny-sparkle {
+            position: absolute;
+            top: 60px; left: 100px;
+            font-size: 30px;
+            animation: flash 0.8s ease-out 2;
+            pointer-events: none;
+            display: none;
+            z-index: 5;
+        }
+
+        @keyframes flash {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
         .ui-area {
             height: 120px;
             background: #111;
@@ -125,22 +126,21 @@
             display: flex;
         }
 
-        /* テキストウィンドウ */
         .message-box {
             flex: 1;
             padding: 15px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
-            line-height: 1.5;
+            line-height: 1.6;
             letter-spacing: 1px;
             border-right: 2px solid #222;
             display: flex;
             align-items: center;
+            color: #fff;
         }
 
-        /* コマンドウインドウ（4分割） */
         .command-box {
-            width: 220px;
+            width: 200px;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 2px;
@@ -152,7 +152,7 @@
             background: #16171e;
             border: 1px solid #333;
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
@@ -164,16 +164,12 @@
             color: #ff007f;
         }
 
-        .cmd-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
+        .cmd-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-        /* 🧠 クイズ選択肢モーダル（技を選ぶと飛び出る） */
         .quiz-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(11, 12, 16, 0.95);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -183,13 +179,24 @@
             z-index: 10;
         }
 
+        .quiz-level-badge {
+            background: #ff007f;
+            color: white;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
         .quiz-q {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             margin-bottom: 20px;
             text-align: center;
-            line-height: 1.5;
+            line-height: 1.6;
             color: #00f0ff;
+            max-width: 500px;
         }
 
         .quiz-options {
@@ -197,182 +204,315 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
         }
 
         .quiz-btn {
-            background: #222;
-            border: 2px solid #444;
+            background: #1f2029;
+            border: 2px solid #3f4257;
             color: white;
             padding: 12px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
+            font-size: 13px;
             transition: all 0.2s;
         }
-        .quiz-btn:hover {
-            border-color: #ff007f;
-            background: #251221;
-        }
+        .quiz-btn:hover { border-color: #ff007f; background: #251221; }
     </style>
+    <!-- 💡 これまでの526問データを外側から吸い込みます -->
+    <script src="quiz_data.js"></script>
 </head>
 <body>
 
     <h1>リカモンバトル</h1>
-    <div style="color: #00f0ff; font-size: 13px; font-weight: bold; margin-bottom: 20px;">SECRET STAGE</div>
+    <div style="color: #03dac6; font-size: 13px; font-weight: bold; margin-bottom: 15px;">BONUS SURVIVAL STAGE</div>
 
     <div class="battle-screen">
-        
         <div class="field-area">
+            <!-- 相手ステータス -->
             <div class="status-panel enemy-status">
                 <div class="status-name">
-                    <span>野生のミトコンド</span>
-                    <span>Lv.35</span>
+                    <span id="enemy-name">???</span>
+                    <span id="enemy-lv">Lv.--</span>
                 </div>
                 <div class="hp-bar-bg">
-                    <div class="hp-bar-fill" id="enemy-hp"></div>
+                    <div class="hp-bar-fill" id="enemy-hp-bar"></div>
                 </div>
             </div>
 
-            <div class="monster-avatar enemy-avatar" id="enemy-sprite">🧬</div>
+            <!-- リカモン画像＆エフェクト -->
+            <div class="shiny-sparkle" id="shiny-effect">✨✨</div>
+            <div class="monster-avatar enemy-avatar" id="enemy-sprite">❔</div>
 
+            <!-- 自分ステータス -->
             <div class="status-panel player-status">
                 <div class="status-name">
-                    <span>あなたの科学力</span>
-                    <span>Lv.99</span>
+                    <span>プレイヤーの科学力</span>
+                    <span id="player-hp-txt">100/100</span>
                 </div>
                 <div class="hp-bar-bg">
-                    <div class="hp-bar-fill" id="player-hp"></div>
+                    <div class="hp-bar-fill" id="player-hp-bar"></div>
                 </div>
             </div>
         </div>
 
+        <!-- 💬 下半分：UI -->
         <div class="ui-area">
-            <div class="message-box" id="msg-text">野生の ミトコンド が あらわれた！</div>
+            <div class="message-box" id="msg-text">探査中...</div>
             <div class="command-box">
-                <button class="cmd-btn" id="btn-fight" onclick="openQuiz()">たたかう</button>
-                <button class="cmd-btn" id="btn-catch" onclick="tryCatch()">つかまえる</button>
-                <button class="cmd-btn" id="btn-run" onclick="runAway()">にげる</button>
-                <button class="cmd-btn" id="btn-reset" onclick="resetBattle()" disabled>もう一度</button>
+                <button class="cmd-btn" id="btn-fight" onclick="openQuiz()" disabled>たたかう</button>
+                <button class="cmd-btn" id="btn-catch" onclick="tryCatch()" disabled>つかまえる</button>
+                <button class="cmd-btn" id="btn-run" onclick="runAway()" disabled>にげる</button>
+                <button class="cmd-btn" id="btn-next" onclick="initNextBattle()" style="display:none; background:#ff007f;">次を探す</button>
             </div>
         </div>
 
+        <!-- 🧠 クイズ画面 -->
         <div class="quiz-overlay" id="quiz-screen">
-            <div class="quiz-q" id="quiz-question">【理科クイズ】細胞内で酸素を使ってエネルギーを取り出す器官はどこ？</div>
-            <div class="quiz-options">
-                <button class="quiz-btn" onclick="handleQuizAnswer(true)">ミトコンドリア</button>
-                <button class="quiz-btn" onclick="handleQuizAnswer(false)">葉緑体</button>
-                <button class="quiz-btn" onclick="handleQuizAnswer(false)">液胞</button>
-                <button class="quiz-btn" onclick="handleQuizAnswer(false)">細胞壁</button>
-            </div>
+            <div class="quiz-level-badge" id="quiz-level-label">難易度</div>
+            <div class="quiz-q" id="quiz-question">クイズ問題</div>
+            <div class="quiz-options" id="quiz-options-container"></div>
         </div>
-
     </div>
 
     <script>
-        // バトルデータ管理
-        let enemyMaxHp = 100;
-        let enemyHp = 100;
-        let isBattleOver = false;
+        // 👾 モンスターデータを10種類に増量！
+        const MONSTERS = [
+            // 初級 (Lv.10〜15) / 耐久値: 1 / quiz_dataの「1年」から問題抽出
+            { name: "ミトコンド", lv: 12, sprite: "🧬", code: "MITO", reqHits: 1 },
+            { name: "オオカナダ", lv: 15, sprite: "🌿", code: "ELODEA", reqHits: 1 },
+            { name: "ゾウリムシアン", lv: 14, sprite: "🩴", code: "PARAM", reqHits: 1 },
+            
+            // 中級 (Lv.25〜35) / 耐久値: 2 / quiz_dataの「2年」から問題抽出
+            { name: "アンモナイトス", lv: 28, sprite: "🐚", code: "AMMON", reqHits: 2 },
+            { name: "ハエナワル", lv: 32, sprite: "🧲", code: "MAGNET", reqHits: 2 },
+            { name: "セキエイノドン", lv: 35, sprite: "💎", code: "QUARTZ", reqHits: 2 },
+            { name: "ヘモグロビンゴ", lv: 30, sprite: "🔴", code: "HEMO", reqHits: 2 },
+            
+            // 上級 (Lv.45〜55) / 耐久値: 3 / quiz_dataの「3年」から問題抽出
+            { name: "マグマドラン", lv: 48, sprite: "🌋", code: "MAGMA", reqHits: 3 },
+            { name: "アンモニアデス", lv: 52, sprite: "💨", code: "NH3GAS", reqHits: 3 },
+            { name: "ニュートンゴースト", lv: 55, sprite: "🍎", code: "GRAVITY", reqHits: 3 }
+        ];
 
-        // メッセージ変更の補助関数
-        function printMsg(text) {
-            document.getElementById('msg-text').innerText = text;
+        let currentMonster = null;
+        let isShiny = false;
+        let enemyMaxHp = 1;
+        let enemyCurrentHp = 1;
+        let playerHp = 100;
+        let isBattleOver = false;
+        
+        // 📈 通算遭遇回数の記録（確定出現ギミック用）
+        let totalEncounters = 0;
+
+        window.onload = function() {
+            initNextBattle();
+        };
+
+        function initNextBattle() {
+            isBattleOver = false;
+            document.getElementById('btn-next').style.display = 'none';
+            toggleButtons(false);
+
+            // 遭遇数を1カウント進める
+            totalEncounters++;
+
+            const base = MONSTERS[Math.floor(Math.random() * MONSTERS.length)];
+            currentMonster = JSON.parse(JSON.stringify(base));
+
+            // ✨ 100回に1回(1%)の通常判定 ＋ 10回目の遭遇時は確定で色違いにするギミック
+            if (totalEncounters === 10) {
+                isShiny = true;
+            } else {
+                isShiny = (Math.floor(Math.random() * 100) === 0);
+            }
+
+            enemyMaxHp = currentMonster.reqHits;
+            enemyCurrentHp = enemyMaxHp;
+
+            let displayName = currentMonster.name;
+            if (isShiny) {
+                displayName = "✨" + displayName + "★";
+                document.getElementById('enemy-sprite').style.filter = "hue-rotate(140deg) drop-shadow(0 0 10px gold)";
+            } else {
+                document.getElementById('enemy-sprite').style.filter = "none";
+            }
+
+            document.getElementById('enemy-name').innerText = displayName;
+            document.getElementById('enemy-lv').innerText = "Lv." + currentMonster.lv;
+            document.getElementById('enemy-sprite').innerText = currentMonster.sprite;
+            document.getElementById('enemy-sprite').style.opacity = "1";
+            updateHpBars();
+
+            if (isShiny) {
+                document.getElementById('shiny-effect').style.display = 'block';
+                document.getElementById('msg-text').innerText = "✨キラーン！✨\nあッ！ 色違いの " + currentMonster.name + " が とびだしてきた！ (通算 " + totalEncounters + " 戦目)";
+                setTimeout(() => { document.getElementById('shiny-effect').style.opacity = 0; }, 1200);
+            } else {
+                document.getElementById('msg-text').innerText = "野生の " + currentMonster.name + " が あらわれた！ (通算 " + totalEncounters + " 戦目)";
+            }
+
+            toggleButtons(true);
         }
 
-        // 「たたかう」を押したとき、クイズ画面をオーバーレイ表示
+        // 🧠 【新機能】quiz_data.js から学年に応じたクイズを自動抽出する関数
+        function getQuizFromData(gradeString) {
+            // 例: "1年" が含まれるクイズデータだけをフィルタリング
+            let filtered = QUIZ_DATA.filter(q => q.category.includes(gradeString));
+            
+            // 万が一データが取れなかったときの安全用のデフォルト問題
+            if (filtered.length === 0) {
+                return { q: "水にとけると電流が流れる物質を何というか？", a: "電解質", dummy: ["非電解質", "純物質", "化合物"] };
+            }
+
+            // ランダムに1問選択
+            let chosen = filtered[Math.floor(Math.random() * filtered.length)];
+
+            // 4択ボタン用に、他の全ての答えのプールからダミーを3つ重複なしで選ぶ
+            let allAnswers = [...new Set(QUIZ_DATA.map(q => q.answer))];
+            let wrongPool = allAnswers.filter(ans => ans !== chosen.answer);
+            wrongPool.sort(() => Math.random() - 0.5);
+            let dummys = wrongPool.slice(0, 3);
+
+            return {
+                q: `【${chosen.detail}】\n${chosen.question}`,
+                a: chosen.answer,
+                dummy: dummys
+            };
+        }
+
         function openQuiz() {
             if (isBattleOver) return;
+
+            let targetGrade = "1年";
+            if (currentMonster.lv >= 25 && currentMonster.lv <= 35) targetGrade = "2年";
+            if (currentMonster.lv >= 45) targetGrade = "3年";
+
+            document.getElementById('quiz-level-label').innerText = "出題範囲: " + targetGrade;
+
+            // 💡 quiz_data.js からデータを引っ張る
+            const qData = getQuizFromData(targetGrade);
+
+            document.getElementById('quiz-question').innerText = qData.q;
+
+            let options = [qData.a, ...qData.dummy];
+            options.sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = "";
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-btn";
+                btn.innerText = opt;
+                btn.onclick = function() { checkQuizAnswer(opt === qData.a); };
+                container.appendChild(btn);
+            });
+
             document.getElementById('quiz-screen').style.display = 'flex';
         }
 
-        // クイズの解答処理
-        function handleQuizAnswer(isCorrect) {
+        function checkQuizAnswer(isCorrect) {
             document.getElementById('quiz-screen').style.display = 'none';
 
             if (isCorrect) {
-                // 🟢 正解：大ダメージ！
-                enemyHp = Math.max(0, enemyHp - 40);
-                document.getElementById('enemy-hp').style.width = enemyHp + '%';
-                printMsg("効果は ばつぐんだ！ ミトコンドに 40の ダメージ！");
-                
-                // HPゲージの色を体力に合わせて変更
-                const hpBar = document.getElementById('enemy-hp');
-                if (enemyHp <= 20) {
-                    hpBar.style.backgroundColor = '#ff3333'; // 赤
-                } else if (enemyHp <= 50) {
-                    hpBar.style.backgroundColor = '#ffcc00'; // 黄
-                }
+                enemyCurrentHp = Math.max(0, enemyCurrentHp - 1);
+                updateHpBars();
+                document.getElementById('msg-text').innerText = "効果は ばつぐんだ！\n理科の知識がクリーンヒット！相手の耐久力を 1 削った！";
 
-                // 相手を倒したか判定
-                if (enemyHp <= 0) {
+                if (enemyCurrentHp <= 0) {
                     setTimeout(() => {
-                        document.getElementById('enemy-sprite').style.opacity = '0';
-                        printMsg("野生の ミトコンド を たおした！ 科学の 勝利だ！");
-                        endBattle();
-                    }, 1500);
+                        document.getElementById('enemy-sprite').style.opacity = "0";
+                        document.getElementById('msg-text').innerText = currentMonster.name + " の耐久力をゼロにした！\n生かしたまま捕獲するチャンスだ！ボールを投げろ！";
+                        endBattle(false);
+                    }, 1200);
                 }
             } else {
-                // 🔴 不正解：攻撃を外す
-                printMsg("しかし 技は はずれた！ 理科の知識が 足りない！");
+                let damage = getEnemyDamage();
+                processPlayerDamage(damage, "クイズの解答を間違えてしまった！\n" + currentMonster.name + " の激しい反撃！");
             }
         }
 
-        // 「つかまえる」を押したときの処理
         function tryCatch() {
             if (isBattleOver) return;
+            toggleButtons(false);
+            document.getElementById('msg-text').innerText = "リカボールを なげた！\nグラ... グラ... グラ...";
 
-            printMsg("科学の力（リカボール）を 投げた！");
-            
-            // ポケモンらしく、HPが低いほど捕獲率が上がるロジック
-            // フルHPだと20%、残りHP20%以下だと80%の確率でゲット
             setTimeout(() => {
-                let catchChance = (100 - enemyHp) + 20; 
-                let randomVal = Math.floor(Math.random() * 100);
+                let hpRatio = enemyCurrentHp / enemyMaxHp; 
+                let baseChance = 60 - currentMonster.lv; 
+                let hpBonus = (1 - hpRatio) * 50; 
+                
+                let finalChance = baseChance + hpBonus;
+                let roll = Math.floor(Math.random() * 100);
 
-                if (randomVal < catchChance) {
-                    // 🎉 ゲット成功！
-                    document.getElementById('enemy-sprite').innerHTML = '⚽'; // ボールに変化
-                    printMsg("やったー！ ミトコンド を つかまえたぞ！ クリアコードは【 GRIT 】だ！");
-                    endBattle();
+                if (roll < finalChance) {
+                    document.getElementById('enemy-sprite').innerText = "⚽";
+                    let rewardCode = isShiny ? "SHINY456" : currentMonster.code;
+                    document.getElementById('msg-text').innerText = "やったー！ " + currentMonster.name + " を つかまえたぞ！\n専用解除コードは【 " + rewardCode + " 】だ！";
+                    endBattle(true);
                 } else {
-                    // 💢 ゲット失敗
-                    printMsg("ああっ！ おしい！ リカモンが ボールから とびだした！");
+                    let catchFailDamage = Math.floor(getEnemyDamage() * 0.8);
+                    processPlayerDamage(catchFailDamage, "ああっ！ おしい！ ボールから とびだされた！\n暴れた " + currentMonster.name + " のカウンターアタック！");
                 }
-            }, 1200);
+            }, 2000);
         }
 
-        // 「にげる」を押したとき
+        function getEnemyDamage() {
+            if (currentMonster.lv <= 15) return 20;
+            if (currentMonster.lv <= 35) return 30;
+            return 45;
+        }
+
+        function processPlayerDamage(damage, initialMessage) {
+            playerHp = Math.max(0, playerHp - damage);
+            updateHpBars();
+            document.getElementById('msg-text').innerText = initialMessage + " " + damage + " のダメージを受けた！";
+
+            if (playerHp <= 0) {
+                setTimeout(() => {
+                    document.getElementById('msg-text').innerText = "プレイヤーの科学力が つきてしまった！\n目の前が まっくらに なった！";
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 2500);
+                }, 1500);
+            } else {
+                if (isBattleOver === false) toggleButtons(true);
+            }
+        }
+
         function runAway() {
-            if (isBattleOver) return;
-            printMsg("うまく にげきれた！ ポータル画面に戻ろう。");
-            endBattle();
+            document.getElementById('msg-text').innerText = "うまく にげきれた！";
+            endBattle(false);
         }
 
-        // バトル終了処理
-        function endBattle() {
+        function endBattle(isCaught) {
             isBattleOver = true;
-            document.getElementById('btn-fight').disabled = true;
-            document.getElementById('btn-catch').disabled = true;
-            document.getElementById('btn-run').disabled = true;
-            document.getElementById('btn-reset').disabled = false;
+            toggleButtons(false);
+            if (!isCaught && playerHp > 0) {
+                document.getElementById('btn-next').style.display = 'block';
+            }
         }
 
-        // リセットして再戦
-        function resetBattle() {
-            enemyHp = 100;
-            isBattleOver = false;
-            document.getElementById('enemy-hp').style.width = '100%';
-            document.getElementById('enemy-hp').style.backgroundColor = '#00ff66';
-            document.getElementById('enemy-sprite').style.opacity = '1';
-            document.getElementById('enemy-sprite').innerHTML = '🧬';
-            
-            document.getElementById('btn-fight').disabled = false;
-            document.getElementById('btn-catch').disabled = false;
-            document.getElementById('btn-run').disabled = false;
-            document.getElementById('btn-reset').disabled = true;
-            
-            printMsg("野生の ミトコンド が あらわれた！");
+        function toggleButtons(enabled) {
+            document.getElementById('btn-fight').disabled = !enabled;
+            document.getElementById('btn-catch').disabled = !enabled;
+            document.getElementById('btn-run').disabled = !enabled;
+        }
+
+        function updateHpBars() {
+            const enemyPer = (enemyCurrentHp / enemyMaxHp) * 100;
+            const enemyBar = document.getElementById('enemy-hp-bar');
+            enemyBar.style.width = enemyPer + "%";
+            if (enemyPer <= 34) enemyBar.style.backgroundColor = "#ff3333";
+            else if (enemyPer <= 50) enemyBar.style.backgroundColor = "#ffcc00";
+            else enemyBar.style.backgroundColor = "#00ff66";
+
+            const playerBar = document.getElementById('player-hp-bar');
+            playerBar.style.width = playerHp + "%";
+            document.getElementById('player-hp-txt').innerText = playerHp + " / 100";
+            if (playerHp <= 30) playerBar.style.backgroundColor = "#ff3333";
+            else playerBar.style.backgroundColor = "#00ff66";
         }
     </script>
 </body>
