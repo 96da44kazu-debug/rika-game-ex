@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「リカゲーム」試作版 - エネルギー呼吸</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212; /* イカゲーム風の漆黒背景 */
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-align: center;
+            color: #ff007f; /* 特徴的なピンク */
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #00f0ff; /* シアンの差し色 */
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            width: 100%;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* 中央のコア（ミトコンドリア）エリア */
+        .core-container {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .core-factory {
+            width: 180px;
+            height: 180px;
+            background: #222;
+            border: 4px dashed #00f0ff;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .core-title {
+            font-size: 14px;
+            color: #00f0ff;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .core-status {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* 正解時に爆発・放出されるエネルギーエフェクト */
+        .energy-beam {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,0,127,0.8) 0%, transparent 70%);
+            z-index: 1;
+            transform: scale(0);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        /* 放出状態のアニメーションクラス */
+        .energy-beam.active {
+            transform: scale(2.2);
+            opacity: 1;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px #ff007f, inset 0 0 20px #ff007f; }
+            100% { box-shadow: 0 0 50px #ff007f, inset 0 0 40px #ff007f; }
+        }
+
+        .core-factory.success {
+            border-color: #ff007f;
+            background: #331424;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.8);
+        }
+
+        /* 選択肢（パーツ）ボタン群 */
+        .choices-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .choice-btn {
+            background: #262626;
+            border: 2px solid #444;
+            color: #ffffff;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .choice-btn:hover {
+            border-color: #00f0ff; /* 選ぶ前はシアンに光る */
+            background-color: #2d3538;
+            transform: translateY(-2px);
+        }
+
+        /* 選択された状態 */
+        .choice-btn.selected {
+            border-color: #ff007f;
+            background-color: #331424;
+            box-shadow: 0 0 12px rgba(255, 0, 127, 0.5);
+        }
+
+        /* コントロールエリア */
+        .control-panel {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .action-btn {
+            background: #ff007f;
+            color: white;
+            border: none;
+            padding: 14px 50px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,0,127,0.3);
+            transition: all 0.2s;
+            letter-spacing: 2px;
+        }
+
+        .action-btn:hover {
+            background: #e60072;
+            transform: scale(1.02);
+        }
+
+        .action-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .reset-link {
+            color: #888;
+            text-decoration: underline;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .reset-link:hover {
+            color: #ff007f;
+        }
+
+        #result-text {
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 30px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .correct { color: #00ff66; text-shadow: 0 0 15px rgba(0,255,102,0.6); }
+        .incorrect { color: #ff3333; text-shadow: 0 0 15px rgba(255,51,51,0.6); }
+    </style>
+</head>
+<body>
+
+    <h1>「リカゲーム」試作版</h1>
+    <div class="subtitle">STAGE 3：細胞呼吸で【エネルギーを取り出すのに必要な物質】をすべて点火せよ。</div>
+
+    <div class="game-wrapper">
+        
+        <div class="core-container">
+            <div class="energy-beam" id="energyBeam"></div>
+            <div class="core-factory" id="coreFactory">
+                <div class="core-title">🧬 反応炉</div>
+                <div class="core-status" id="coreStatus">物質未注入</div>
+            </div>
+        </div>
+
+        <div class="choices-grid">
+            <button class="choice-btn" data-id="nutrition" onclick="toggleChoice(this)">① 栄養分（有機物）</button>
+            <button class="choice-btn" data-id="oxygen" onclick="toggleChoice(this)">② 酸素</button>
+            <button class="choice-btn" data-id="water" onclick="toggleChoice(this)">③ 水</button>
+            <button class="choice-btn" data-id="co2" onclick="toggleChoice(this)">④ 二酸化炭素</button>
+        </div>
+
+        <div class="control-panel">
+            <button class="action-btn" id="submitBtn" onclick="igniteCore()">エネルギーを抽出する</button>
+            <div id="result-text"></div>
+            <div class="reset-link" onclick="resetGame()">システムをリセット</div>
+        </div>
+
+    </div>
+
+    <script>
+        // 細胞呼吸で「エネルギーを取り出すために必要なもの（反応の出発点）」
+        const REQUIRED_MATERIALS = ['nutrition', 'oxygen'];
+        
+        // プレイヤーが今選択している物質のリスト
+        let selectedMaterials = [];
+        let isCleared = false;
+
+        // ボタンがクリックされたときの選択・解除処理
+        function toggleChoice(button) {
+            if (isCleared) return; // クリア後は操作不可
+
+            const materialId = button.getAttribute('data-id');
+            const resultText = document.getElementById('result-text');
+            resultText.innerText = ''; // メッセージをクリア
+
+            if (selectedMaterials.includes(materialId)) {
+                // すでに選択されていれば解除
+                selectedMaterials = selectedMaterials.filter(id => id !== materialId);
+                button.classList.remove('selected');
+            } else {
+                // 未選択なら追加
+                selectedMaterials.push(materialId);
+                button.classList.add('selected');
+            }
+
+            // 反応炉のステータス文字を更新
+            const statusEl = document.getElementById('coreStatus');
+            if (selectedMaterials.length === 0) {
+                statusEl.innerText = "物質未注入";
+                statusEl.style.color = "#aaa";
+            } else {
+                statusEl.innerText = `${selectedMaterials.length}個の物質を注入中...`;
+                statusEl.style.color = "#00f0ff";
+            }
+        }
+
+        // 答え合わせ（点火ボタンを押したとき）
+        function igniteCore() {
+            if (isCleared) return;
+
+            const resultEl = document.getElementById('result-text');
+            const factoryEl = document.getElementById('coreFactory');
+            const beamEl = document.getElementById('energyBeam');
+            const statusEl = document.getElementById('coreStatus');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // 正解判定のロジック
+            // 選択した数が正解と同じ、かつ、正解の物質がすべて含まれているか
+            const hasAllRequired = REQUIRED_MATERIALS.every(id => selectedMaterials.includes(id));
+            const isCorrectCount = selectedMaterials.length === REQUIRED_MATERIALS.length;
+
+            if (hasAllRequired && isCorrectCount) {
+                // 🟢 正解演出：エネルギー大放出！
+                isCleared = true;
+                
+                resultEl.className = 'correct';
+                resultEl.innerText = '🟢 生存：完全点火！細胞から大量のエネルギーが放出されました！';
+                
+                statusEl.innerText = "⚡ ENERGY MAX !!";
+                statusEl.style.color = "#ff007f";
+                
+                factoryEl.classList.add('success');
+                beamEl.classList.add('active'); // ピンクのオーラを大爆発させる
+                submitBtn.disabled = true;
+
+            } else {
+                // 🔴 不正解演出
+                resultEl.className = 'incorrect';
+                if (selectedMaterials.length === 0) {
+                    resultEl.innerText = '🔴 脱落：物質が何も注入されていません。';
+                } else if (selectedMaterials.includes('co2') || selectedMaterials.includes('water')) {
+                    resultEl.innerText = '🔴 脱落：それは細胞呼吸によって【出される物質】です！';
+                } else {
+                    resultEl.innerText = '🔴 脱落：エネルギーを取り出すには物質が足りません。';
+                }
+                
+                // 炉を軽く揺らす（簡易的な失敗エフェクト）
+                factoryEl.style.transform = 'scale(0.95)';
+                setTimeout(() => factoryEl.style.transform = 'scale(1)', 100);
+            }
+        }
+
+        // ゲームのリセット処理
+        function resetGame() {
+            selectedMaterials = [];
+            isCleared = false;
+
+            // すべてのボタンの選択状態を解除
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+
+            // 演出や文字を初期化
+            document.getElementById('coreFactory').classList.remove('success');
+            document.getElementById('energyBeam').classList.remove('active');
+            document.getElementById('coreStatus').innerText = "物質未注入";
+            document.getElementById('coreStatus').style.color = "#aaa";
+            document.getElementById('result-text').innerText = '';
+            document.getElementById('submitBtn').disabled = false;
+        }
+    </script>
+</body>
+</html>

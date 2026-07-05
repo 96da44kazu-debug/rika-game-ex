@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「リカゲーム」試作版 - 理科一問一答クイズ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212; /* イカゲーム風の漆黒背景 */
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-align: center;
+            color: #ff007f; /* 特徴的なピンク */
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #00f0ff; /* シアンの差し色 */
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .quiz-wrapper {
+            max-width: 600px;
+            width: 100%;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .quiz-category {
+            color: #00f0ff;
+            font-weight: bold;
+        }
+
+        .question-box {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            min-height: 80px;
+        }
+
+        .choices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            background: #262626;
+            border: 2px solid #444;
+            color: #ffffff;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            border-color: #ff007f;
+            background-color: #251221;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+            transform: translateX(5px);
+        }
+
+        .choice-number {
+            background: #333;
+            color: #00f0ff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .result-screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-text {
+            font-size: 48px;
+            font-weight: 900;
+            color: #00ff66;
+            text-shadow: 0 0 20px rgba(0,255,102,0.4);
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: #ff007f;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,0,127,0.3);
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .action-btn:hover {
+            background: #e60072;
+            transform: scale(1.05);
+        }
+    </style>
+    
+    <script src="quiz_data.js"></script>
+</head>
+<body>
+
+    <h1>リカゲーム</h1>
+    <div class="subtitle">STAGE 4：一問一答。ランダムに選ばれた10問を全問正解し生存せよ。</div>
+
+    <div class="quiz-wrapper">
+        <div id="game-container">
+            </div>
+    </div>
+
+    <script>
+        // 今回のゲームで使用する10問を格納する配列
+        let selectedQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // 全体のデータ（QUIZ_DATA）からランダムに10問選ぶ関数
+        function shuffleAndPickQuestions() {
+            // 元のデータをシャッフル
+            let shuffled = [...QUIZ_DATA].sort(() => Math.random() - 0.5);
+            // 最初から10問だけを抜き取る
+            selectedQuestions = shuffled.slice(0, 10);
+        }
+
+        // 4択を自動生成する関数（他の問題の正解から誤答を引っ張る）
+        function generateChoices(currentQuiz) {
+            // 1. 全問題から「answer」を重複なしで集める
+            const allAnswers = [...new Set(QUIZ_DATA.map(q => q.answer))];
+            
+            // 2. 今回の正解以外の答え（誤答候補）に絞る
+            let wrongChoices = allAnswers.filter(ans => ans !== currentQuiz.answer);
+            
+            // 3. 誤答候補をランダムシャッフル
+            wrongChoices.sort(() => Math.random() - 0.5);
+            
+            // 4. 誤答候補から3つ抜き出す
+            let selectedWrong = wrongChoices.slice(0, 3);
+            
+            // 5. 正解と合体
+            let finalChoices = [currentQuiz.answer, ...selectedWrong];
+            
+            // 6. 最後に4択自体を混ぜて返す
+            return finalChoices.sort(() => Math.random() - 0.5);
+        }
+
+        function initGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            shuffleAndPickQuestions(); // 10問選抜
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const container = document.getElementById('game-container');
+            const currentQuiz = selectedQuestions[currentQuestionIndex];
+
+            // 4択ボタンの生成
+            const generatedChoices = generateChoices(currentQuiz);
+
+            let choicesHtml = '';
+            generatedChoices.forEach((choice, index) => {
+                choicesHtml += `
+                    <button class="choice-btn" onclick="selectAnswer('${choice}')">
+                        <span class="choice-number">${index + 1}</span>
+                        <span>${choice}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="quiz-header">
+                    <span class="quiz-progress">第 ${currentQuestionIndex + 1} 問 / 全 10 問</span>
+                    <span class="quiz-category">${currentQuiz.category} [${currentQuiz.detail}]</span>
+                </div>
+                <div class="question-box">Q. ${currentQuiz.question}</div>
+                <div class="choices-list">
+                    ${choicesHtml}
+                </div>
+            `;
+        }
+
+        function selectAnswer(selectedChoice) {
+            const currentQuiz = selectedQuestions[currentQuestionIndex];
+            
+            if (selectedChoice === currentQuiz.answer) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < 10) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            const container = document.getElementById('game-container');
+            let comment = '';
+            
+            if (score === 10) {
+                comment = '🟢 完全生存：素晴らしい！完璧な知識で生き残りました！';
+            } else if (score >= 6) {
+                comment = '🔺 暫定生存：なんとか生き残りましたが、一部の知識に不安が残ります。';
+            } else {
+                comment = '🔴 脱落：生存ラインに届きませんでした。もう一度やり直してください。';
+            }
+
+            container.innerHTML = `
+                <div class="result-screen">
+                    <h2>🎮 GAME OVER (結果発表)</h2>
+                    <div class="score-text">${score} / 10</div>
+                    <p style="margin-bottom: 25px; color: #ccc;">${comment}</p>
+                    <button class="action-btn" onclick="initGame()">もう一度挑戦する</button>
+                </div>
+            `;
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>

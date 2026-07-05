@@ -65,45 +65,128 @@
             font-size: 1.1rem;
             color: #03dac6; 
             letter-spacing: 3px;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
             font-weight: 700;
         }
 
         .game-list {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
         .game-card {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 22px 30px;
+            padding: 20px 25px;
             background-color: #16171e;
             border: 3px solid #2a2b36;
             text-decoration: none;
             color: #ffffff;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 700;
             transition: all 0.3s ease;
         }
 
-        .game-card:hover {
+        .game-card:hover:not(.locked) {
             border-color: #ff007f;
             background-color: #251221;
             transform: translateY(-3px);
             box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
         }
 
+        /* 🔒 ロック中カード専用のスタイル */
+        .game-card.locked {
+            opacity: 0.35;
+            border: 3px dashed #444;
+            background-color: #0d0e12;
+            cursor: not-allowed;
+        }
+
+        /* 🔓 ロック解除時のネオン風エフェクト */
+        .game-card.unlocked {
+            border-color: #00ff66 !important;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
+            background-color: #0e2116;
+            animation: unlockGlow 1s ease-out;
+        }
+
+        @keyframes unlockGlow {
+            0% { transform: scale(1); border-color: #444; }
+            50% { transform: scale(1.03); border-color: #00ff66; box-shadow: 0 0 30px #00ff66; }
+            100% { transform: scale(1); }
+        }
+
         .card-symbol {
             color: #ff007f;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 900;
         }
 
+        .locked-symbol {
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        /* 🔑 コード入力エリアのスタイル */
+        .code-input-section {
+            margin-top: 45px;
+            background: #111217;
+            border: 1px solid #2a2b36;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .code-input-section h3 {
+            font-size: 1rem;
+            color: #03dac6;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .secret-code-field {
+            background: #20222b;
+            border: 2px solid #3f4257;
+            color: #ffffff;
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            text-align: center;
+            letter-spacing: 2px;
+            width: 60%;
+            outline: none;
+        }
+
+        .secret-code-field:focus {
+            border-color: #ff007f;
+        }
+
+        .code-submit-btn {
+            background: #ff007f;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .code-submit-btn:hover {
+            background: #e60072;
+        }
+
         footer {
-            margin-top: 60px;
+            margin-top: 40px;
             font-size: 0.75rem;
             color: #444655;
             letter-spacing: 2px;
@@ -120,20 +203,35 @@
         <div class="subtitle">生存をかけたミニゲームを選択せよ</div>
 
         <div class="game-list">
-            <a href="game1/" class="game-card">
-                <span>第1ゲーム：だるまさんがころんだ</span>
+            
+            <a href="rika_game_bio2-01.html" class="game-card">
+                <span>STAGE 1：細胞の構造仕分け</span>
                 <span class="card-symbol">○</span>
             </a>
             
-            <a href="rika_game_bio2-01.html" class="game-card">
-                <span>第2ゲーム：細胞の構造仕分け</span>
+            <a href="rika_game_bio2-02.html" class="game-card">
+                <span>STAGE 2：単細胞生物の物質出入</span>
                 <span class="card-symbol">△</span>
             </a>
 
-            <a href="#" class="game-card" style="opacity: 0.4; cursor: not-allowed;" onclick="alert('このゲームはまだ準備中だ。'); return false;">
-                <span>第3ゲーム：？？？？（ロック中）</span>
+            <a href="rika_game_quiz.html" class="game-card">
+                <span>STAGE 3：理科一問一答（全526問）</span>
                 <span class="card-symbol">□</span>
             </a>
+
+            <a href="#" class="game-card locked" id="stage4-card" onclick="handleStage4Click(event)">
+                <span id="stage4-title">STAGE 4：？？？？？？（ロック中）</span>
+                <span class="locked-symbol" id="stage4-icon">🔒</span>
+            </a>
+
+        </div>
+
+        <div class="code-input-section">
+            <h3>🔑 クリアコードを入力してシークレットを解除せよ</h3>
+            <div class="input-group">
+                <input type="text" class="secret-code-field" id="secretCodeInput" placeholder="CODEを入力" autocomplete="off">
+                <button class="code-submit-btn" onclick="verifySecretCode()">送信</button>
+            </div>
         </div>
 
         <footer>
@@ -141,5 +239,54 @@
         </footer>
     </div>
 
+    <script>
+        // 設定したいシークレットコード（※自由に変更してください）
+        const CORRECT_CODE = "526"; 
+        let isStage4Unlocked = false;
+
+        function verifySecretCode() {
+            const inputField = document.getElementById('secretCodeInput');
+            const userCode = inputField.value.trim();
+
+            if (userCode === CORRECT_CODE) {
+                if (isStage4Unlocked) {
+                    alert("ステージ4は既に解放されている。");
+                    return;
+                }
+
+                // 🔓 ロック解除の演出と書き換え
+                isStage4Unlocked = true;
+                
+                const card = document.getElementById('stage4-card');
+                const title = document.getElementById('stage4-title');
+                const icon = document.getElementById('stage4-icon');
+
+                card.classList.remove('locked');
+                card.classList.add('unlocked');
+                
+                // リンク先（将来作るファイル名など）をセット
+                card.href = "rika_game_secret.html"; 
+                
+                title.innerText = "STAGE 4：極限サバイバル（シークレット解放）";
+                title.style.color = "#00ff66";
+                
+                icon.innerHTML = "✨";
+                icon.className = "";
+                icon.style.fontSize = "1.3rem";
+
+                alert("🟢 コード認証成功。シークレットステージが解放された。");
+                inputField.value = "";
+            } else {
+                alert("🔴 コードが違う。やり直せ。");
+            }
+        }
+
+        function handleStage4Click(e) {
+            if (!isStage4Unlocked) {
+                e.preventDefault();
+                alert('このステージは現在ロックされている。各ゲームをクリアして手に入るコードを入力せよ。');
+            }
+        }
+    </script>
 </body>
 </html>
