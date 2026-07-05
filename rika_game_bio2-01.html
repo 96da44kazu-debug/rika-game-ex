@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「リカゲーム」試作版</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212; /* イカゲーム風の漆黒背景 */
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+        }
+
+        /* イカゲームのフォント・色（ショッキングピンク）を意識したタイトル */
+        h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-align: center;
+            color: #ff007f; /* 特徴的なピンク */
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #00f0ff; /* トライアングルや案内人をイメージさせる差し色シアン */
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* メインレイアウト（左に選択肢、右に仕分け箱） */
+        .game-container {
+            display: flex;
+            gap: 30px;
+            max-width: 900px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* 選択肢（パーツ）エリア */
+        .parts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 250px;
+        }
+
+        .parts-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ccc;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        /* パーツカード */
+        .card {
+            background-color: #262626;
+            border: 2px solid #444;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        /* 選択中のパーツの見た目 */
+        .card.selected {
+            border-color: #ff007f;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+            background-color: #331424;
+        }
+
+        /* すでに配置済みのパーツ（非表示にする用） */
+        .card.hidden {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        /* 仕分け箱エリア */
+        .boxes-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .box {
+            background-color: #1a1a1a;
+            border: 2px dashed #00f0ff;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 120px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .box:hover {
+            background-color: #22252a;
+            border-style: solid;
+        }
+
+        .box-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00f0ff;
+        }
+
+        /* 箱の中に入ったアイテムの見たみ */
+        .placed-item {
+            display: inline-block;
+            background-color: #ff007f;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .placed-item:hover {
+            background-color: #d00068;
+            text-decoration: line-through;
+        }
+
+        /* ボタンエリア */
+        .btn-container {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn {
+            background-color: #ff007f;
+            color: white;
+        }
+        .submit-btn:hover { background-color: #d00068; }
+
+        .reset-btn {
+            background-color: #444;
+            color: white;
+        }
+        .reset-btn:hover { background-color: #555; }
+
+        /* 結果メッセージ */
+        #result-message {
+            margin-top: 25px;
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 30px;
+        }
+        .correct { color: #00ff66; text-shadow: 0 0 10px rgba(0,255,102,0.4); }
+        .incorrect { color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.4); }
+    </style>
+</head>
+<body>
+
+    <h1>リカゲーム</h1>
+    <div class="subtitle">STAGE 2：細胞の構造を正しく仕分けよ</div>
+
+    <div class="game-container">
+        <div class="parts-container">
+            <div class="parts-title">細胞のパーツ（クリックで選択）</div>
+            <div class="card" data-value="A">細胞壁</div>
+            <div class="card" data-value="B">葉緑体</div>
+            <div class="card" data-value="C">液胞</div>
+            <div class="card" data-value="D">細胞膜</div>
+            <div class="card" data-value="E">核</div>
+            <div class="card" data-value="F">細胞質</div>
+        </div>
+
+        <div class="boxes-container">
+            <div class="box" id="plant-box" onclick="placeItem('plant-box')">
+                <div class="box-title">【植物細胞】にしか見られないもの</div>
+                <div class="box-content" id="plant-box-content"></div>
+            </div>
+
+            <div class="box" id="animal-box" onclick="placeItem('animal-box')">
+                <div class="box-title">【植物・動物】両方に見られるもの</div>
+                <div class="box-content" id="animal-box-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button class="submit-btn" onclick="checkAnswers()">提出する</button>
+        <button class="reset-btn" onclick="resetQuiz()">リセット</button>
+    </div>
+
+    <div id="result-message"></div>
+
+    <script>
+        // 正解の定義
+        const GOAL = {
+            'plant-box': ['A', 'B', 'C'],
+            'animal-box': ['D', 'E', 'F']
+        };
+
+        // 現在のプレイヤーの解答状態
+        let currentAnswers = {
+            'plant-box': [],
+            'animal-box': []
+        };
+
+        // 現在選択されているパーツの値 (A〜F)
+        let selectedPartValue = null;
+        let selectedElement = null;
+
+        // すべてのパーツカードにクリックイベントを設定
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // すでに配置済みのカードなら何もしない
+                if(card.classList.contains('hidden')) return;
+
+                // すでに他のカードが選択されていれば解除
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected');
+                }
+
+                // 新しく選択されたカードをセット
+                selectedPartValue = card.getAttribute('data-value');
+                selectedElement = card;
+                card.classList.add('selected');
+                
+                // クリックの連鎖を防ぐ
+                e.stopPropagation();
+            });
+        });
+
+        // 箱をクリックしたときに選択中のアイテムを配置する処理
+        function placeItem(boxId) {
+            if (!selectedPartValue) {
+                alert("先に配置したいパーツを選択してください。");
+                return;
+            }
+
+            // すでに同じ箱に入っていないかチェック
+            if (currentAnswers[boxId].includes(selectedPartValue)) {
+                alert("そのパーツは既に配置されています。");
+                return;
+            }
+
+            // 解答データに追加
+            currentAnswers[boxId].push(selectedPartValue);
+
+            // 画面（箱の中身）を更新
+            renderBox(boxId);
+
+            // 選択元になったカードをグレーアウト（配置済み）にする
+            selectedElement.classList.remove('selected');
+            selectedElement.classList.add('hidden');
+
+            // 選択状態をリセット
+            selectedPartValue = null;
+            selectedElement = null;
+        }
+
+        // 箱の中身を描画する処理
+        function renderBox(boxId) {
+            const container = document.getElementById(`${boxId}-content`);
+            container.innerHTML = ''; // 一旦クリア
+
+            currentAnswers[boxId].forEach(val => {
+                // 値から文字（パーツ名）を取得
+                const cardText = document.querySelector(`.card[data-value="${val}"]`).innerText;
+                
+                // 箱の中に表示するバッジ要素を作成
+                const itemEl = document.createElement('span');
+                itemEl.className = 'placed-item';
+                itemEl.innerText = cardText + " ✖";
+                
+                // バッジをクリックしたらキャンセル（取り消し）できるようにする
+                itemEl.onclick = (e) => {
+                    removeItem(boxId, val);
+                    e.stopPropagation(); // 箱自体のクリックイベントを発動させない
+                };
+
+                container.appendChild(itemEl);
+            });
+        }
+
+        // 配置したアイテムを取り消す（元に戻す）処理
+        function removeItem(boxId, val) {
+            // 配列から削除
+            currentAnswers[boxId] = currentAnswers[boxId].filter(item => item !== val);
+            
+            // 箱の表示を更新
+            renderBox(boxId);
+
+            // 元のカードのグレーアウトを解除する
+            const originalCard = document.querySelector(`.card[data-value="${val}"]`);
+            if (originalCard) {
+                originalCard.classList.remove('hidden');
+            }
+        }
+
+        // 答え合わせの処理
+        function checkAnswers() {
+            const resultEl = document.getElementById('result-message');
+            
+            const plantCorrect = isMatch(currentAnswers['plant-box'], GOAL['plant-box']);
+            const animalCorrect = isMatch(currentAnswers['animal-box'], GOAL['animal-box']);
+
+            if (plantCorrect && animalCorrect) {
+                resultEl.className = 'correct';
+                resultEl.innerText = '🟢 生存：正解です！次のステージへ進めます。';
+            } else {
+                resultEl.className = 'incorrect';
+                resultEl.innerText = '🔴 脱落：間違っているか、パーツが足りません。';
+            }
+        }
+
+        // 配列の中身が一致しているか判定する補助関数
+        function isMatch(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+            return [...arr1].sort().every((val, index) => val === [...arr2].sort()[index]);
+        }
+
+        // リセット処理
+        function resetQuiz() {
+            currentAnswers['plant-box'] = [];
+            currentAnswers['animal-box'] = [];
+
+            // 箱の中身を空にする
+            renderBox('plant-box');
+            renderBox('animal-box');
+
+            // カードの非表示・選択状態をすべて元に戻す
+            cards.forEach(card => {
+                card.classList.remove('hidden');
+                card.classList.remove('selected');
+            });
+
+            selectedPartValue = null;
+            selectedElement = null;
+
+            document.getElementById('result-message').innerText = '';
+        }
+    </script>
+</body>
+</html>
