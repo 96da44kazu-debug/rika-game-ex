@@ -98,7 +98,6 @@
             background: #16171e; border: 2px solid #03dac6; color: #03dac6;
             padding: 6px 20px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer;
         }
-        .party-trigger-btn:hover { background: #03dac6; color: #111217; }
 
         .d-pad-container { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 2px; }
         .d-btn {
@@ -318,32 +317,35 @@
             checkBossSpawnConditions();
         }
 
-        // 👑 【条件変更】伝説の2体が両方ともクリアされたら、幻のリカモンを出現させる
+        // 👑 【バグ修正完了】条件クリア時のみ伝説・幻をマップに出現させる
         function checkBossSpawnConditions() {
             let bossSymbol = document.getElementById('boss-symbol');
             
-            // 1. 伝説2体(10とcomp)が両方クリアされており、かつ幻(both)が未クリアなら幻を最優先出現
+            let has10Kills = killCount >= 10;
+            let hasAllComp = (new Set(playerParty.map(p => p.code)).size) >= 6;
+
+            // 1. 伝説2体が両方ともクリア（撃破or捕獲）済み、かつ幻が未クリアなら【幻カミオカンデ】が出現
             if (clearedBosses["10"] && clearedBosses["comp"] && !clearedBosses["both"]) {
                 activeBossType = "both";
                 bossSymbol.innerText = bossPool.both.sprite;
                 bossSymbol.style.display = "flex";
                 bossSpawned = true;
             } 
-            // 2. 伝説アインシュタインが未クリアなら常時出現（撃破数条件を撤廃し最初から配置）
-            else if (!clearedBosses["10"]) {
+            // 2. 10体撃破を達成しており、まだアインシュタインをクリアしていないなら【伝説アインシュタイン】が出現
+            else if (has10Kills && !clearedBosses["10"]) {
                 activeBossType = "10";
                 bossSymbol.innerText = bossPool["10"].sprite;
                 bossSymbol.style.display = "flex";
                 bossSpawned = true;
             } 
-            // 3. 伝説ダーウィンが未クリアなら常時出現（図鑑条件に関わらずマップ上で戦えるように配置）
-            else if (!clearedBosses["comp"]) {
+            // 3. 全通常種コンプを達成しており、まだダーウィンをクリアしていないなら【伝説ダーウィン】が出現
+            else if (hasAllComp && !clearedBosses["comp"]) {
                 activeBossType = "comp";
                 bossSymbol.innerText = bossPool.comp.sprite;
                 bossSymbol.style.display = "flex";
                 bossSpawned = true;
             } 
-            // 4. すべてクリア済み
+            // 4. まだ条件を満たしていないか、すべて処理が完了した場合は非表示
             else {
                 bossSymbol.style.display = "none";
                 bossSpawned = false;
@@ -479,7 +481,6 @@
             }, 1500);
         }
 
-        // クイズ属性選択
         function showTypeSelectMenu() {
             document.getElementById('log-text').innerText = "戦術の属性を選択してください。";
             document.getElementById('action-area').innerHTML = `
