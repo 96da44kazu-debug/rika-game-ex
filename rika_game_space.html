@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太陽系探索ゲーム - リカゲーム仕様</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=700;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #0b0c10;
+            user-select: none;
+        }
+        
+        .app-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* 🌐 ヘッダー（リカゲーム公式漆黒ネオン） */
+        .top-bar {
+            background: rgba(22, 23, 30, 0.9);
+            padding: 15px;
+            border-bottom: 3px solid #ff007f;
+            pointer-events: auto;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .title {
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+        }
+        
+        .subtitle {
+            font-size: 13px;
+            color: #03dac6;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        /* 🐱 ヘッダーのドット絵風ミニ猫装飾 */
+        .top-cat-deco {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+        }
+        
+        /* 📊 パネル共通スタイル（SFメカ風） */
+        .info-panel, .controls-panel, .challenge-panel {
+            position: absolute;
+            background: rgba(22, 23, 30, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #2a2b36;
+            pointer-events: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        }
+
+        .info-panel:hover, .controls-panel:hover, .challenge-panel:hover {
+            border-color: #ff007f;
+        }
+        
+        .info-panel {
+            top: 100px;
+            left: 20px;
+            max-width: 280px;
+        }
+        
+        .info-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #03dac6;
+            padding-bottom: 4px;
+        }
+        
+        .info-item {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #e0e0e0;
+        }
+        
+        .info-label {
+            color: #03dac6;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .controls-panel {
+            bottom: 20px;
+            left: 20px;
+            max-width: 280px;
+        }
+        
+        .control-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .control-item {
+            font-size: 12px;
+            color: #aaa;
+            margin: 6px 0;
+        }
+        
+        .challenge-panel {
+            top: 100px;
+            right: 20px;
+            width: 320px;
+        }
+        
+        /* 💗 ネオンピンクの挑戦ボタン */
+        .challenge-button {
+            width: 100%;
+            padding: 12px;
+            background: #ff007f;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+        }
+        
+        .challenge-button:hover {
+            background: #e60072;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+        }
+        
+        .challenge-button:disabled {
+            background: #3f4257;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .question-box {
+            margin-top: 16px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .question-text {
+            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+        
+        /* 選択肢ボタン */
+        .answer-button {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+            background: #20222b;
+            color: #ffffff;
+            border: 2px solid #3f4257;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .answer-button:hover {
+            border-color: #03dac6;
+            color: #03dac6;
+            background: #152528;
+        }
+        
+        .answer-button.correct {
+            background: rgba(0, 255, 102, 0.2) !important;
+            border-color: #00ff66 !important;
+            color: #00ff66 !important;
+        }
+        
+        .answer-button.incorrect {
+            background: rgba(255, 0, 127, 0.2) !important;
+            border-color: #ff007f !important;
+            color: #ff007f !important;
+        }
+        
+        .score-display {
+            text-align: center;
+            font-size: 16px;
+            color: #00ff66;
+            font-weight: bold;
+            margin-top: 12px;
+            white-space: pre-line;
+            line-height: 1.5;
+        }
+        
+        /* 🪐 天体セレクターボタン */
+        .planet-selector {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+
+        .planet-button {
+            padding: 6px 4px;
+            background: #20222b;
+            color: #ffffff;
+            border: 1px solid #3f4257;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        
+        .planet-button:hover {
+            border-color: #03dac6;
+            color: #03dac6;
+        }
+        
+        .planet-button.active {
+            background: #03dac6;
+            border-color: #03dac6;
+            color: #111217;
+        }
+        
+        /* ⏱️ 時間制御ボタン */
+        .time-button {
+            padding: 6px 10px;
+            background: #20222b;
+            color: #ffffff;
+            border: 1px solid #3f4257;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.15s;
+        }
+        
+        .time-button:hover {
+            border-color: #ff007f;
+            color: #ff007f;
+        }
+        
+        .time-button.active {
+            background: #ff007f;
+            border-color: #ff007f;
+            color: #ffffff;
+        }
+        
+        .explanation-box {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(3, 218, 198, 0.1);
+            border: 1px solid rgba(3, 218, 198, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+
+        /* 🏠 ポータルへ戻るボタン */
+        .exit-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: #20222b;
+            border: 2px solid #3f4257;
+            color: white;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            pointer-events: auto;
+            text-decoration: none;
+        }
+        .exit-btn:hover {
+            border-color: #ff007f;
+            color: #ff007f;
+        }
+    </style>
+</head>
+<body class="h-full">
+  <div class="app-container">
+   <div id="canvas-container"></div>
+   <div class="ui-overlay">
+    
+    <div class="top-bar">
+     <!-- ポータルバックリンク -->
+     <a class="exit-btn" href="index.html">🚪 戻る</a>
+     <div class="title" id="main-title">STAGE 05：太陽系探索ゲーム</div>
+     <div class="subtitle" id="welcome-message">宇宙空間をドラッグして回転 / 天体をタップしてデータ解析 🐾</div>
+     <div class="top-cat-deco">🐈🐾</div>
+    </div>
+
+    <!-- 🌌 天体インフォメーション -->
+    <div class="info-panel">
+     <div class="info-title" id="selected-body-name">太陽</div>
+     <div class="info-item"><span class="info-label">直径:</span> <span id="diameter">1,392,000 km</span></div>
+     <div class="info-item"><span class="info-label">質量:</span> <span id="mass">1.989 × 10³⁰ kg</span></div>
+     <div class="info-item"><span class="info-label">軌道周期:</span> <span id="orbit">-</span></div>
+     <div class="info-item"><span class="info-label">太陽からの距離:</span> <span id="distance">0 km</span></div>
+     <div class="info-item"><span class="info-label">重力加速度:</span> <span id="gravity">274 m/s²</span></div>
+     
+     <div style="font-size:11px; color:#ff007f; font-weight:bold; margin-top:12px; border-top:1px dashed #333; padding-top:8px;">🐾 クイックジャンプ：</div>
+     <div class="planet-selector" id="planet-selector"></div>
+    </div>
+
+    <!-- ⌨️ コントロールパネル -->
+    <div class="controls-panel">
+     <div class="control-title">🛸 ミッションコントロール</div>
+     <div class="control-item">🖱️ ドラッグ: 宇宙の視点回転</div>
+     <div class="control-item">🖱️ ホイール上下: 距離ズーム</div>
+     <div class="control-item">🖱️ 直接クリック: 天体ロックオン</div>
+     <div class="control-item" style="margin-top: 10px;">
+      <div style="color: #03dac6; font-weight: bold; margin-bottom: 6px; font-size:12px;">⏱️ タイムワープ（時間速度）</div>
+      <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+          <button class="time-button" data-speed="0">⏸️</button> 
+          <button class="time-button" data-speed="0.5">0.5×</button> 
+          <button class="time-button active" data-speed="1">1×</button> 
+          <button class="time-button" data-speed="5">5×</button> 
+          <button class="time-button" data-speed="10">10×</button>
+      </div>
+     </div>
+    </div>
+
+    <!-- 🏆 チャレンジ（クイズ）パネル -->
+    <div class="challenge-panel">
+     <button class="challenge-button" id="start-challenge">🌟 宇宙科学ミッションに挑戦 🐾</button>
+     <div id="question-container"></div>
+     <div class="score-display" id="score-display"></div>
+    </div>
+
+   </div>
+  </div>
+
+  <script>
+    // Three.js 空間エンジンのセットアップ
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    
+    const container = document.getElementById('canvas-container');
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+    
+    camera.position.set(0, 150, 300);
+    camera.lookAt(0, 0, 0);
+    
+    // ライティング
+    const ambientLight = new THREE.AmbientLight(0x555555, 0.6);
+    scene.add(ambientLight);
+    
+    const sunLight = new THREE.PointLight(0xffffff, 2.5, 5000);
+    sunLight.position.set(0, 0, 0);
+    scene.add(sunLight);
+    
+    // 天体コアデータ（理科の指導要領に準拠）
+    const celestialData = {
+      sun: { name: '太陽', radius: 32, color: 0xff4500, distance: 0, orbitSpeed: 0, rotationSpeed: 0.002, diameter: '1,392,000 km', mass: '1.989 × 10³⁰ kg', orbit: '銀河中心公転', gravity: '274 m/s²', distanceFromSun: '0 km' },
+      earth: { name: '地球', radius: 8, color: 0x00a8ff, distance: 160, orbitSpeed: 0.01, rotationSpeed: 0.02, diameter: '12,742 km', mass: '5.972 × 10²⁴ kg', orbit: '365.25日', gravity: '9.8 m/s²', distanceFromSun: '1億4960万 km' },
+      moon: { name: '月 🐾', radius: 2.5, color: 0xf5f6fa, distance: 22, orbitSpeed: 0.04, rotationSpeed: 0.04, parent: 'earth', diameter: '3,474 km', mass: '7.342 × 10²² kg', orbit: '27.3日', gravity: '1.6 m/s²', distanceFromSun: '38万 km (地球から)' },
+      mars: { name: '火星', radius: 5.5, color: 0xe66767, distance: 240, orbitSpeed: 0.008, rotationSpeed: 0.018, diameter: '6,779 km', mass: '6.39 × 10²³ kg', orbit: '687日', gravity: '3.7 m/s²', distanceFromSun: '2億2790万 km' },
+      jupiter: { name: '木星', radius: 22, color: 'rgb(218,165,32)', distance: 410, orbitSpeed: 0.005, rotationSpeed: 0.04, diameter: '139,820 km', mass: '1.898 × 10²⁷ kg', orbit: '11.86年', gravity: '24.8 m/s²', distanceFromSun: '7億7830万 km' },
+      saturn: { name: '土星', radius: 18, color: 0xf5cd79, distance: 560, orbitSpeed: 0.003, rotationSpeed: 0.038, diameter: '116,460 km', mass: '5.683 × 10²⁶ kg', orbit: '29.46年', gravity: '10.4 m/s²', distanceFromSun: '14億2700万 km', hasRings: true }
+    };
+    
+    const bodies = {};
+    const orbits = {};
+    
+    // 天体3Dアセット生成
+    Object.keys(celestialData).forEach(key => {
+      const data = celestialData[key];
+      const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
+      const material = new THREE.MeshPhongMaterial({ 
+        color: data.color,
+        emissive: key === 'sun' ? 0xff3300 : 0x000000,
+        emissiveIntensity: key === 'sun' ? 0.6 : 0,
+        shininess: key === 'earth' ? 15 : 5
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.userData = { key: key, data: data };
+      bodies[key] = mesh;
+      scene.add(mesh);
+      
+      // 公転軌道ラインの描写
+      if (data.distance > 0 && !data.parent) {
+        const orbitGeometry = new THREE.BufferGeometry();
+        const orbitPoints = [];
+        for (let i = 0; i <= 128; i++) {
+          const angle = (i / 128) * Math.PI * 2;
+          orbitPoints.push(Math.cos(angle) * data.distance, 0, Math.sin(angle) * data.distance);
+        }
+        orbitGeometry.setAttribute('position', new THREE.Float32BufferAttribute(orbitPoints, 3));
+        const orbitMaterial = new THREE.LineBasicMaterial({ color: 0x3f4257, opacity: 0.4, transparent: true });
+        const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
+        orbits[key] = orbitLine;
+        scene.add(orbitLine);
+      }
+      
+      // 土星の環
+      if (data.hasRings) {
+        const ringGeometry = new THREE.RingGeometry(data.radius * 1.4, data.radius * 2.3, 64);
+        const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xcf9d4e, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        ring.rotation.x = Math.PI / 2;
+        mesh.add(ring);
+      }
+    });
+    
+    // マウス・ドラッグ視点カメラ制御
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let selectedBody = 'sun';
+    
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cameraRotation = { theta: 0, phi: Math.PI / 4 };
+    let cameraDistance = 350;
+    let targetCameraDistance = 350;
+    let cameraTarget = new THREE.Vector3(0, 0, 0);
+    let targetCameraTarget = new THREE.Vector3(0, 0, 0);
+    
+    renderer.domElement.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+    
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+        cameraRotation.theta -= deltaX * 0.007;
+        cameraRotation.phi -= deltaY * 0.007;
+        cameraRotation.phi = Math.max(0.05, Math.min(Math.PI - 0.05, cameraRotation.phi));
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+    });
+    
+    renderer.domElement.addEventListener('mouseup', () => { isDragging = false; });
+    
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      targetCameraDistance += e.deltaY * 0.25;
+      targetCameraDistance = Math.max(40, Math.min(1200, targetCameraDistance));
+    }, { passive: false });
+    
+    let clickStartPos = { x: 0, y: 0 };
+    renderer.domElement.addEventListener('mousedown', (e) => { clickStartPos = { x: e.clientX, y: e.clientY }; });
+    
+    renderer.domElement.addEventListener('click', (e) => {
+      const dragDistance = Math.sqrt(Math.pow(e.clientX - clickStartPos.x, 2) + Math.pow(e.clientY - clickStartPos.y, 2));
+      if (dragDistance > 5) return;
+      
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(Object.values(bodies));
+      
+      if (intersects.length > 0) {
+        const intersected = intersects[0].object;
+        selectedBody = intersected.userData.key;
+        updateInfoPanel();
+        focusOnBody(selectedBody);
+      }
+    });
+    
+    function focusOnBody(bodyKey) {
+      const body = bodies[bodyKey];
+      const data = celestialData[bodyKey];
+      targetCameraTarget.copy(body.position);
+      
+      if (bodyKey === 'sun') targetCameraDistance = 220;
+      else if (bodyKey === 'moon') targetCameraDistance = 45;
+      else targetCameraDistance = data.radius * 8;
+    }
+    
+    function updateInfoPanel() {
+      const data = celestialData[selectedBody];
+      document.getElementById('selected-body-name').textContent = data.name;
+      document.getElementById('diameter').textContent = data.diameter;
+      document.getElementById('mass').textContent = data.mass;
+      document.getElementById('orbit').textContent = data.orbit;
+      document.getElementById('distance').textContent = data.distanceFromSun;
+      document.getElementById('gravity').textContent = data.gravity;
+      
+      document.querySelectorAll('.planet-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.body === selectedBody);
+      });
+    }
+    
+    // クイックジャンプボタン構築
+    const planetSelector = document.getElementById('planet-selector');
+    Object.keys(celestialData).forEach(key => {
+      const button = document.createElement('button');
+      button.className = 'planet-button';
+      button.textContent = celestialData[key].name.replace(' 🐾', '');
+      button.dataset.body = key;
+      button.addEventListener('click', () => {
+        selectedBody = key;
+        updateInfoPanel();
+        focusOnBody(key);
+      });
+      planetSelector.appendChild(button);
+    });
+    
+    updateInfoPanel();
+    
+    // タイムワープ制御
+    let timeSpeed = 1;
+    document.querySelectorAll('.time-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        timeSpeed = parseFloat(btn.dataset.speed);
+        document.querySelectorAll('.time-button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+    
+    // 🐈 宇宙科学クイズデータ（ちょっと猫要素ブレンド）
+    const quizQuestions = [
+      { question: '太陽系で最も大きくて、もし猫が着陸したら一瞬でつぶれちゃうほど重力が強い惑星はどれ？', answers: ['木星', '土星', '地球', '火星'], correct: 0, explanation: '木星は太陽系最大の惑星で、直径は地球の約11倍。重力も地球の2.4倍以上あります！' },
+      { question: '地球が太陽の周りをぐるっと1周する「公転周期」はどれくらい？', answers: ['365.25日', '687日', '27.3日', '29.46年'], correct: 0, explanation: '地球の公転周期は365.25日です。この0.25日分のズレを調整するために4年に1度「うるう年」があります。' },
+      { question: '月の重力は地球の約6分の1です。地球で体重6kgの猫が月に行くと、なんと何kgになっちゃう？', answers: ['1kg 🐾', '2kg', '3kg', '6kgのまま'], correct: 0, explanation: '重力が6分の1になるので、体重（バネばかりでの測定値）は1kgになります。ただし、お肉の量（質量）は変わりません！' },
+      { question: '土星の周りにある美しい「環（リング）」の正体はいったい何？', answers: ['氷や岩石の粒 🐾', 'ガスや煙', '光のイタズラ', '透明なガラス'], correct: 0, explanation: '土星の環は、数センチから数メートル大の無数の「氷や岩石の粒」が集まって回っているものです。' },
+      { question: '火星の表面が赤っぽくサビついた色に見える理由は、何が多く含まれているから？', answers: ['酸化鉄（鉄のさび）', '赤いマグマ', '大気のチリ', 'イチゴジャム'], correct: 0, explanation: '火星の土には「酸化鉄（赤サビ）」が大量に含まれているため、地球から見ても赤く輝いて見えます。' },
+      { question: '太陽系で木星の次に大きく、水に浮かべるとプカプカ浮いちゃうほど密度が軽い惑星はどれ？', answers: ['土星', '海王星', '天王星', '金星'], correct: 0, explanation: '正解は土星です。直径は地球の約9倍もありますが、大部分がガスでできているため平均密度が水よりも軽いです。' }
+    ];
+    
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let quizActive = false;
+    
+    document.getElementById('start-challenge').addEventListener('click', startQuiz);
+    
+    function startQuiz() {
+      if (quizActive) return;
+      quizActive = true;
+      currentQuestionIndex = 0;
+      score = 0;
+      document.getElementById('score-display').textContent = '';
+      document.getElementById('start-challenge').disabled = true;
+      showQuestion();
+    }
+    
+    function showQuestion() {
+      if (currentQuestionIndex >= quizQuestions.length) {
+        endQuiz();
+        return;
+      }
+      
+      const question = quizQuestions[currentQuestionIndex];
+      const container = document.getElementById('question-container');
+      
+      container.innerHTML = `
+        <div class="question-box">
+          <div class="question-text">ミッション 【${currentQuestionIndex + 1}】<br>${question.question}</div>
+          ${question.answers.map((answer, index) => `
+            <button class="answer-button" data-index="${index}">${answer}</button>
+          `).join('')}
+        </div>
+      `;
+      
+      container.querySelectorAll('.answer-button').forEach(btn => {
+        btn.addEventListener('click', handleAnswer);
+      });
+    }
+    
+    function handleAnswer(e) {
+      const selectedIndex = parseInt(e.target.dataset.index);
+      const question = quizQuestions[currentQuestionIndex];
+      const buttons = document.querySelectorAll('.answer-button');
+      
+      buttons.forEach(btn => btn.disabled = true);
+      
+      if (selectedIndex === question.correct) {
+        e.target.classList.add('correct');
+        score++;
+      } else {
+        e.target.classList.add('incorrect');
+        buttons[question.correct].classList.add('correct');
+      }
+      
+      const container = document.getElementById('question-container');
+      const explanationDiv = document.createElement('div');
+      explanationDiv.className = 'explanation-box';
+      explanationDiv.innerHTML = `💡 <b>解説：</b>${question.explanation}`;
+      container.querySelector('.question-box').appendChild(explanationDiv);
+      
+      setTimeout(() => {
+        currentQuestionIndex++;
+        showQuestion();
+      }, 3500);
+    }
+    
+    function endQuiz() {
+      const container = document.getElementById('question-container');
+      container.innerHTML = '';
+      
+      const percentage = Math.round((score / quizQuestions.length) * 100);
+      let msg = '';
+      if (percentage >= 80) msg = '🎉 素晴らしい！一流の宇宙ニャン科学者だ！🐾';
+      else if (percentage >= 50) msg = '👍 合格ライン突破！よく頑張ったね！';
+      else msg = '📚 もう一度天体を調査してリベンジしよう！';
+      
+      document.getElementById('score-display').innerHTML = `ミッションリポート<br>スコア: <span style="color:#ff007f;">${score} / ${quizQuestions.length}</span> (${percentage}%)<br>${msg}`;
+      
+      // クエストクリアコードの発行（すべて正解なら隠しコード）
+      if(score === quizQuestions.length) {
+         document.getElementById('score-display').innerHTML += `<br><span style="color:gold; font-size:12px;">🔑 図鑑コード：【 <b>SHINY456</b> 】</span>`;
+      }
+
+      document.getElementById('start-challenge').disabled = false;
+      document.getElementById('start-challenge').textContent = "もう一度挑戦する";
+      quizActive = false;
+    }
+    
+    // アニメーションループ（公転・自転計算）
+    let runTime = 0;
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      runTime += 0.01 * timeSpeed;
+      
+      Object.keys(celestialData).forEach(key => {
+        const data = celestialData[key];
+        const body = bodies[key];
+        
+        if (data.parent) {
+          const parent = bodies[data.parent];
+          const angle = runTime * data.orbitSpeed;
+          body.position.x = parent.position.x + Math.cos(angle) * data.distance;
+          body.position.z = parent.position.z + Math.sin(angle) * data.distance;
+        } else if (data.distance > 0) {
+          const angle = runTime * data.orbitSpeed;
+          body.position.x = Math.cos(angle) * data.distance;
+          body.position.z = Math.sin(angle) * data.distance;
+        }
+        
+        body.rotation.y += data.rotationSpeed * timeSpeed;
+      });
+      
+      // カメラ補間（スムーズ追従）
+      cameraDistance += (targetCameraDistance - cameraDistance) * 0.05;
+      cameraTarget.lerp(targetCameraTarget, 0.05);
+      
+      const x = cameraTarget.x + Math.sin(cameraRotation.theta) * Math.sin(cameraRotation.phi) * cameraDistance;
+      const y = cameraTarget.y + Math.cos(cameraRotation.phi) * cameraDistance;
+      const z = cameraTarget.z + Math.cos(cameraRotation.theta) * Math.sin(cameraRotation.phi) * cameraDistance;
+      
+      camera.position.set(x, y, z);
+      camera.lookAt(cameraTarget);
+      
+      renderer.render(scene, camera);
+    }
+    
+    animate();
+    
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+  </script>
+</body>
+</html>
