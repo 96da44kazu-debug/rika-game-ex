@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リカモンRPG - β版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=700;900&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0b0c10; color: #ffffff;
+            font-family: 'Noto Sans JP', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; overflow: hidden; user-select: none;
+        }
+
+        /* 全体コンテナ */
+        .game-container {
+            position: relative; width: 100%; max-width: 512px; height: 100vh; max-height: 720px;
+            background-color: #111217; border: 4px solid #ff007f; 
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.3); display: flex; flex-direction: column;
+        }
+
+        /* 上部ナビゲーション */
+        .top-nav {
+            background: #16171e; padding: 12px; border-bottom: 3px solid #ff007f;
+            display: flex; justify-content: space-between; align-items: center; z-index: 20;
+        }
+        .exit-btn {
+            background: #20222b; border: 2px solid #3f4257; color: white;
+            padding: 4px 12px; font-size: 12px; font-weight: bold; border-radius: 4px;
+            text-decoration: none; cursor: pointer;
+        }
+        .exit-btn:hover { border-color: #ff007f; color: #ff007f; }
+        .stage-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: #ff007f; }
+
+        /* 画面切り替え */
+        .screen { position: relative; flex: 1; width: 100%; display: none; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* 🗺️ マップ画面 */
+        #map-screen { background-color: #1b2616; justify-content: space-between; align-items: center; padding: 10px; }
+        
+        /* ステータスバー */
+        .player-status-bar {
+            width: 100%; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 6px;
+            font-size: 11px; display: flex; flex-direction: column; gap: 6px; border: 1px solid #333;
+        }
+        .status-row-top { display: flex; justify-content: space-between; }
+
+        /* 📊 4すくみ四角形配置用コンテナ */
+        .affinity-quad-container {
+            background: #16171e; border: 2px solid #ff007f; border-radius: 6px;
+            padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .quad-title { font-size: 10px; color: #03dac6; font-weight: bold; }
+        .quad-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: 100%; max-width: 320px;
+        }
+        .quad-item {
+            background: #20222b; border: 1px solid #3f4257; padding: 4px 8px;
+            border-radius: 4px; font-size: 11px; text-align: center; font-weight: bold;
+        }
+
+        .map-grid {
+            display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr);
+            width: 360px; height: 360px; border: 3px solid #2a2b36; background-color: #2e4427; position: relative;
+        }
+        .tile { display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .tile.grass { background-color: #1e3516; position: relative; }
+        .tile.grass::after { content: "🌿"; font-size: 14px; opacity: 0.5; position: absolute; }
+
+        #player {
+            position: absolute; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; transition: left 0.1s linear, top 0.1s linear; z-index: 5;
+        }
+        
+        /* ボスシンボル */
+        #boss-symbol {
+            position: absolute; width: 36px; height: 36px; display: none; align-items: center; justify-content: center;
+            font-size: 26px; z-index: 4; animation: pulse 1.5s infinite alternate;
+        }
+        @keyframes pulse { 0% { transform: scale(0.9); } 100% { transform: scale(1.1); } }
+
+        /* 次のステージへ進む特設ボタン */
+        .next-stage-banner {
+            width: 100%; background: linear-gradient(90deg, #ff007f, #7928ca);
+            color: white; border: none; padding: 8px; font-weight: 900; font-size: 13px;
+            border-radius: 6px; cursor: pointer; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            display: none; text-align: center; margin-top: 2px;
+        }
+
+        /* 操作UI */
+        .map-ui-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .map-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
+        .party-trigger-btn {
+            background: #16171e; border: 2px solid #03dac6; color: #03dac6;
+            padding: 6px 20px; font-size: 12px; font-weight: bold; border-radius: 20px; cursor: pointer;
+        }
+        .party-trigger-btn:hover { background: #03dac6; color: #111217; }
+
+        .d-pad-container { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 2px; }
+        .d-btn {
+            background: #20222b; border: 2px solid #3f4257; color: white;
+            font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .d-btn:active { background: #ff007f; border-color: #ff007f; }
+
+        /* ==========================================
+           ⚔️ バトル画面 
+           ========================================== */
+        #battle-screen { background: linear-gradient(to bottom, #0d0e12 0%, #1a1c23 100%); padding: 12px; justify-content: space-between; }
+        .battle-arena { flex: 1; display: flex; flex-direction: column; justify-content: space-around; }
+        .battle-row { display: flex; width: 100%; align-items: center; gap: 10px; }
+        .enemy-side { justify-content: flex-end; text-align: right; }
+        .player-side { justify-content: flex-start; text-align: left; }
+        .rikamon-sprite { font-size: 3.5rem; animation: float 2s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+        .status-window { background: rgba(22, 23, 30, 0.95); border: 2px solid #2a2b36; padding: 6px 10px; border-radius: 8px; width: 170px; font-size: 12px; }
+        .hp-bar-bg { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+        .hp-bar-fill { width: 100%; height: 100%; background: #00ff66; transition: width 0.4s ease; }
+
+        .type-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: bold; color: #fff; margin-top: 2px; }
+        .type-bio { background-color: #4caf50; }  
+        .type-chem { background-color: #ff9800; } 
+        .type-earth { background-color: #9c27b0; }
+        .type-phys { background-color: #2196f3; } 
+        .type-boss { background-color: #e91e63; } 
+
+        .battle-log {
+            background: #111217; border: 2px solid #2a2b36; min-height: 95px;
+            padding: 10px; font-size: 12px; font-weight: bold; line-height: 1.5;
+            border-radius: 6px; color: #03dac6; text-align: left; margin-bottom: 6px; white-space: pre-line;
+        }
+        .battle-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .action-btn {
+            background: #20222b; border: 2px solid #3f4257; color: white;
+            padding: 10px 6px; font-size: 12px; font-weight: bold; border-radius: 6px;
+            cursor: pointer; transition: all 0.2s; text-align: center;
+        }
+        .action-btn:hover:not(:disabled) { border-color: #ff007f; color: #ff007f; }
+        .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* 👜 手持ち一覧モーダル */
+        #party-modal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 12, 16, 0.95); z-index: 50; padding: 20px; flex-direction: column; align-items: center;
+        }
+        #party-modal.active { display: flex; }
+        .modal-title { font-size: 16px; font-weight: 900; color: #03dac6; margin-bottom: 15px; border-bottom: 2px solid #03dac6; width: 100%; text-align: center; }
+        .party-list { width: 100%; display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
+        .party-item { background: #16171e; border: 2px solid #2a2b36; border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .party-icon { font-size: 1.8rem; }
+    </style>
+    <script src="quiz_data.js"></script>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- 🗺️ マップ画面 -->
+        <div id="map-screen" class="screen active">
+            <div class="player-status-bar">
+                <div class="status-row-top">
+                    <div>🏆 称号: <span id="txt-title">新米研究員</span></div>
+                    <div>⚔️ 撃破数: <span id="txt-exp">0</span>体</div>
+                    <div>📖 図鑑: <span id="txt-book">1</span>/6種</div>
+                </div>
+                
+                <!-- 📊 四角形レイアウトの4すくみ表 -->
+                <div class="affinity-quad-container">
+                    <div class="quad-title">⚔️ 属性相性表（与ダメージ2.0倍）</div>
+                    <div class="quad-grid">
+                        <div class="quad-item" style="color: #4caf50;">生命🌿 ➔ 物質💨</div>
+                        <div class="quad-item" style="color: #ff9800;">物質💨 ➔ 地球🌋</div>
+                        <div class="quad-item" style="color: #9c27b0;">地球🌋 ➔ エネ🍎</div>
+                        <div class="quad-item" style="color: #2196f3;">エネ🍎 ➔ 生命🌿</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-grid" id="grid">
+                <div id="boss-symbol">🧝‍♂️</div>
+                <div id="player">🧑‍🔬</div>
+            </div>
+            
+            <button id="btn-next-stage" class="next-stage-banner" onclick="goNextStage()">🚀 次のステージ（STAGE 07：宇宙エリア）へ進む</button>
+
+            <div class="map-ui-bottom">
+                <div class="map-btn-row">
+                    <button class="party-trigger-btn" onclick="openPartyMenu(false)">👜 手持ち確認</button>
+                </div>
+
+                <div class="d-pad-container">
+                    <div></div><button class="d-btn" onclick="movePlayer(0, -1)">▲</button><div></div>
+                    <button class="d-btn" onclick="movePlayer(-1, 0)">◀</button><div></div><button class="d-btn" onclick="movePlayer(1, 0)">▶</button>
+                    <div></div><button class="d-btn" onclick="movePlayer(0, 1)">▼</button><div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚔️ バトル画面 -->
+        <div id="battle-screen" class="screen">
+            <!-- 📊 四角形レイアウトの4すくみ表 -->
+            <div class="affinity-quad-container" style="margin-bottom: 5px;">
+                <div class="quad-title">⚔️ 属性相性表（与ダメージ2.0倍）</div>
+                <div class="quad-grid">
+                    <div class="quad-item" style="color: #4caf50;">生命🌿 ➔ 物質💨</div>
+                    <div class="quad-item" style="color: #ff9800;">物質💨 ➔ 地球🌋</div>
+                    <div class="quad-item" style="color: #9c27b0;">地球🌋 ➔ エネ🍎</div>
+                    <div class="quad-item" style="color: #2196f3;">エネ🍎 ➔ 生命🌿</div>
+                </div>
+            </div>
+
+            <div class="battle-arena">
+                <div class="battle-row enemy-side">
+                    <div class="status-window">
+                        <div style="font-weight: bold;" id="enemy-name">-</div>
+                        <span class="type-badge" id="enemy-type-badge">-</span>
+                        <div style="text-align:right; font-size:10px; color:#aaa;" id="enemy-hp-text">HP: 50/50</div>
+                        <div class="hp-bar-bg"><div class="hp-bar-fill" id="enemy-hp-fill"></div></div>
+                    </div>
+                    <div class="rikamon-sprite" id="enemy-sprite">🧬</div>
+                </div>
+
+                <div class="battle-row player-side">
+                    <div class="rikamon-sprite" id="player-sprite">𩨼</div>
+                    <div class="status-window">
+                        <div style="font-weight: bold;" id="player-rikamon-name">-</div>
+                        <span class="type-badge" id="player-type-badge">-</span>
+                        <div style="font-size:10px; color:#aaa;" id="player-hp-text">HP: 100/100</div>
+                        <div class="hp-bar-bg"><div class="hp-bar-fill" id="player-hp-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="battle-log" id="log-text">-</div>
+            <div class="battle-actions" id="action-area"></div>
+        </div>
+
+        <!-- 👜 手持ち一覧モーダル -->
+        <div id="party-modal">
+            <div class="modal-title" id="modal-header-title">👜 手持ち一覧</div>
+            <div class="party-list" id="party-list-container"></div>
+            <button class="action-btn" style="width:80%; margin-top:10px;" onclick="closePartyMenu()">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 📊 リカモンデータ定義 ---
+        const wildPool = [
+            { name: "ミトコンド", sprite: "🧬", hp: 45, type: "生命", cssClass: "type-bio", code: "MITO" },
+            { name: "オオカナダ", sprite: "🌿", hp: 50, type: "生命", cssClass: "type-bio", code: "ELODEA" },
+            { name: "アンモニアデス", sprite: "💨", hp: 40, type: "物質", cssClass: "type-chem", code: "NH3GAS" },
+            { name: "マグマドラン", sprite: "🌋", hp: 55, type: "地球", cssClass: "type-earth", code: "MAGMA" },
+            { name: "ニュートンG", sprite: "🍎", hp: 60, type: "エネルギー", cssClass: "type-phys", code: "GRAVITY" },
+            { name: "プラゴミゴン", sprite: "♻️", hp: 50, type: "環境", cssClass: "type-env", code: "ENVPLASTIC" }
+        ];
+
+        const bossPool = {
+            "10": { name: "伝説アインシュタイン", sprite: "🧝‍♂️", hp: 120, type: "エネルギー", cssClass: "type-boss", code: "BOSS_EINSTEIN", isBoss: true },
+            "comp": { name: "伝説ダーウィン", sprite: "👴", hp: 130, type: "生命", cssClass: "type-boss", code: "BOSS_DARWIN", isBoss: true },
+            "both": { name: "幻カミオカンデ", sprite: "🌌", hp: 160, type: "物質", cssClass: "type-boss", code: "BOSS_KAMIOKA", isBoss: true }
+        };
+
+        const typeAdvantage = {
+            "生命": { "物質": 2.0, "エネルギー": 0.5 },
+            "物質": { "地球": 2.0, "生命": 0.5 },
+            "地球": { "エネルギー": 2.0, "物質": 0.5 },
+            "エネルギー": { "生命": 2.0, "地球": 0.5 }
+        };
+
+        // --- 🎮 進行度管理フラグ ---
+        let killCount = 0; 
+        let playerParty = [ { name: "ミトコンド(相棒)", sprite: "🧬", type: "生命", cssClass: "type-bio", code: "MITO" } ];
+        
+        let clearedBosses = { "10": false, "comp": false, "both": false };
+        let nextStageUnlocked = false;
+
+        let bossSpawned = false;
+        let activeBossType = null; 
+        let bossPos = { x: 4, y: 4 };
+
+        // 🗺️ マップ初期化
+        const gridSize = 10; const tileSize = 36;
+        let playerPos = { x: 1, y: 1 };
+        const mapLayout = [
+            [0,0,1,1,1,0,0,0,0,0], [0,0,1,1,1,1,1,0,0,0], [0,0,0,1,1,1,1,1,0,0],
+            [0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,1,1], [1,1,0,0,0,0,0,1,1,1],
+            [1,1,1,1,0,0,1,1,1,1], [1,1,1,1,0,0,1,1,1,1], [0,1,1,0,0,0,0,1,1,0], [0,0,0,0,0,0,0,0,0,0]
+        ];
+
+        const gridEl = document.getElementById('grid');
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                if (mapLayout[y][x] === 1) tile.classList.add('grass');
+                gridEl.appendChild(tile);
+            }
+        }
+
+        function updateUIPanel() {
+            document.getElementById('txt-exp').innerText = killCount;
+            
+            let title = "新米研究員";
+            if(killCount >= 3) title = "生物ハンター";
+            if(killCount >= 7) title = "エレメントマスター";
+            if(killCount >= 10) title = "理科界の覇者";
+            document.getElementById('txt-title').innerText = title;
+
+            let uniqueCollected = new Set(playerParty.map(p => p.code)).size;
+            document.getElementById('txt-book').innerText = `${uniqueCollected}/6`;
+
+            document.getElementById('btn-next-stage').style.display = nextStageUnlocked ? "block" : "none";
+
+            checkBossSpawnConditions();
+        }
+
+        // 👑 【条件変更】伝説の2体が両方ともクリアされたら、幻のリカモンを出現させる
+        function checkBossSpawnConditions() {
+            let bossSymbol = document.getElementById('boss-symbol');
+            
+            // 1. 伝説2体(10とcomp)が両方クリアされており、かつ幻(both)が未クリアなら幻を最優先出現
+            if (clearedBosses["10"] && clearedBosses["comp"] && !clearedBosses["both"]) {
+                activeBossType = "both";
+                bossSymbol.innerText = bossPool.both.sprite;
+                bossSymbol.style.display = "flex";
+                bossSpawned = true;
+            } 
+            // 2. 伝説アインシュタインが未クリアなら常時出現（撃破数条件を撤廃し最初から配置）
+            else if (!clearedBosses["10"]) {
+                activeBossType = "10";
+                bossSymbol.innerText = bossPool["10"].sprite;
+                bossSymbol.style.display = "flex";
+                bossSpawned = true;
+            } 
+            // 3. 伝説ダーウィンが未クリアなら常時出現（図鑑条件に関わらずマップ上で戦えるように配置）
+            else if (!clearedBosses["comp"]) {
+                activeBossType = "comp";
+                bossSymbol.innerText = bossPool.comp.sprite;
+                bossSymbol.style.display = "flex";
+                bossSpawned = true;
+            } 
+            // 4. すべてクリア済み
+            else {
+                bossSymbol.style.display = "none";
+                bossSpawned = false;
+                activeBossType = null;
+            }
+
+            if(bossSpawned) {
+                bossSymbol.style.left = (bossPos.x * tileSize) + 'px';
+                bossSymbol.style.top = (bossPos.y * tileSize) + 'px';
+            }
+        }
+
+        function updatePlayerVisual() {
+            const playerEl = document.getElementById('player');
+            playerEl.style.left = (playerPos.x * tileSize) + 'px';
+            playerEl.style.top = (playerPos.y * tileSize) + 'px';
+
+            if(bossSpawned && playerPos.x === bossPos.x && playerPos.y === bossPos.y) {
+                let currentBossData = bossPool[activeBossType];
+                triggerEncounter(currentBossData);
+            }
+        }
+        updatePlayerVisual(); updateUIPanel();
+
+        function movePlayer(dx, dy) {
+            let nextX = playerPos.x + dx; let nextY = playerPos.y + dy;
+            if (nextX >= 0 && nextX < gridSize && nextY >= 0 && nextY < gridSize) {
+                playerPos.x = nextX; playerPos.y = nextY;
+                updatePlayerVisual();
+                if (!bossSpawned && mapLayout[playerPos.y][playerPos.x] === 1 && Math.random() < 0.12) {
+                    triggerEncounter(null);
+                }
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('map-screen').classList.contains('active') && !document.getElementById('party-modal').classList.contains('active')) {
+                if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
+                if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
+                if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
+                if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+            }
+        });
+
+        function goNextStage() {
+            alert("🚀 STAGE 07：宇宙エリアへのワープゲートを起動しました！（開発中のためここまでとなります）");
+        }
+
+        // --- ⚔️ バトル制御システム ---
+        let enemyMaxHP, enemyHP, playerMaxHP = 100, playerHP;
+        let currentEnemy = null; let activeQuiz = null; let chosenAttackType = "";
+        let isBattleSwapMode = false;
+
+        function triggerEncounter(forcedBossData = null) {
+            if(forcedBossData) {
+                currentEnemy = JSON.parse(JSON.stringify(forcedBossData));
+            } else {
+                const base = wildPool[Math.floor(Math.random() * wildPool.length)];
+                currentEnemy = { name: "野生の" + base.name, sprite: base.sprite, hp: base.hp, type: base.type, cssClass: base.cssClass, code: base.code, isBoss: false };
+            }
+
+            enemyMaxHP = currentEnemy.hp; enemyHP = currentEnemy.hp; playerHP = playerMaxHP;
+
+            const partner = playerParty[0];
+            document.getElementById('player-rikamon-name').innerText = partner.name;
+            document.getElementById('player-sprite').innerText = partner.sprite;
+            document.getElementById('player-type-badge').innerText = partner.type;
+            document.getElementById('player-type-badge').className = `type-badge ${partner.cssClass}`;
+
+            document.getElementById('enemy-name').innerText = currentEnemy.name;
+            document.getElementById('enemy-sprite').innerText = currentEnemy.sprite;
+            document.getElementById('enemy-type-badge').innerText = currentEnemy.type;
+            document.getElementById('enemy-type-badge').className = `type-badge ${currentEnemy.cssClass}`;
+
+            updateHPVisuals();
+            document.getElementById('map-screen').classList.remove('active');
+            document.getElementById('battle-screen').classList.add('active');
+            showMainMenu();
+        }
+
+        function updateHPVisuals() {
+            document.getElementById('enemy-hp-text').innerText = `HP: ${enemyHP}/${enemyMaxHP}`;
+            document.getElementById('enemy-hp-fill').style.width = `${(enemyHP / enemyMaxHP) * 100}%`;
+            document.getElementById('player-hp-text').innerText = `HP: ${playerHP}/${playerMaxHP}`;
+            document.getElementById('player-hp-fill').style.width = `${(playerHP / playerMaxHP) * 100}%`;
+        }
+
+        function showMainMenu() {
+            document.getElementById('log-text').innerText = `${currentEnemy.name} が目の前に立ちはだかった！`;
+            const area = document.getElementById('action-area');
+            area.innerHTML = `
+                <button class="action-btn" onclick="showTypeSelectMenu()">⚔️ クイズで攻撃</button>
+                <button class="action-btn" onclick="tryCapture()">🏐 フラスコを投げる</button>
+                <button class="action-btn" onclick="openPartyMenu(true)" ${playerParty.length < 2 ? 'disabled' : ''}>🔀 交代</button>
+                <button class="action-btn" onclick="runAway()">🏃 逃げる</button>
+            `;
+        }
+
+        function runAway() {
+            document.getElementById('battle-screen').classList.remove('active');
+            document.getElementById('map-screen').classList.add('active');
+            updateUIPanel();
+        }
+
+        function tryCapture() {
+            document.getElementById('log-text').innerText = "特製フラスコを投げた！\nグラグラ……グラグラ……";
+            document.getElementById('action-area').innerHTML = "";
+            
+            setTimeout(() => {
+                let captureChance = currentEnemy.isBoss ? 0.15 : 0.50;
+                
+                if(Math.random() < captureChance) {
+                    document.getElementById('log-text').innerText = `🎉 見事に成功！\n手持ちに ${currentEnemy.name} が加わった！`;
+                    playerParty.push({ 
+                        name: currentEnemy.name.replace("野生の","").replace("伝説","").replace("幻",""), 
+                        sprite: currentEnemy.sprite, 
+                        type: currentEnemy.type, 
+                        cssClass: currentEnemy.cssClass, 
+                        code: currentEnemy.code 
+                    });
+
+                    if(currentEnemy.isBoss) {
+                        clearedBosses[activeBossType] = true; 
+                        if(activeBossType === "both") {
+                            nextStageUnlocked = true; 
+                        }
+                    }
+                    setTimeout(runAway, 2500);
+                } else {
+                    document.getElementById('log-text').innerText = "だめだ！力強くフラスコを弾き返された！";
+                    setTimeout(enemyTurn, 1200);
+                }
+            }, 1500);
+        }
+
+        // クイズ属性選択
+        function showTypeSelectMenu() {
+            document.getElementById('log-text').innerText = "戦術の属性を選択してください。";
+            document.getElementById('action-area').innerHTML = `
+                <button class="action-btn" style="color:#4caf50;" onclick="startQuizPhase('生命')">🌿 生命・生物</button>
+                <button class="action-btn" style="color:#ff9800;" onclick="startQuizPhase('物質')">💨 物質</button>
+                <button class="action-btn" style="color:#9c27b0;" onclick="startQuizPhase('地球')">🌋 地球</button>
+                <button class="action-btn" style="color:#2196f3;" onclick="startQuizPhase('エネルギー')">🍎 エネルギー</button>
+                <button class="action-btn" style="grid-column: span 2;" onclick="showMainMenu()">↩️ もどる</button>
+            `;
+        }
+
+        function startQuizPhase(selectedType) {
+            chosenAttackType = selectedType;
+            const pool = QUIZ_DATA.filter(q => q.category.includes(chosenAttackType) || q.category.includes(chosenAttackType.replace("生命","生物")));
+            activeQuiz = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : QUIZ_DATA[Math.floor(Math.random() * QUIZ_DATA.length)];
+            
+            let choicesSet = new Set([activeQuiz.answer]);
+            while(choicesSet.size < 4) {
+                choicesSet.add(QUIZ_DATA[Math.floor(Math.random() * QUIZ_DATA.length)].answer);
+            }
+            const finalChoices = Array.from(choicesSet).sort(() => Math.random() - 0.5);
+
+            document.getElementById('log-text').innerText = `【${chosenAttackType}クイズ】\n${activeQuiz.question}`;
+            const area = document.getElementById('action-area'); area.innerHTML = "";
+
+            finalChoices.forEach(choice => {
+                const btn = document.createElement('button'); btn.className = 'action-btn'; btn.innerText = choice;
+                btn.addEventListener('click', () => selectAnswer(choice));
+                area.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(chosen) {
+            document.querySelectorAll('#action-area .action-btn').forEach(b => b.disabled = true);
+            if (chosen === activeQuiz.answer) {
+                let modifier = 1.0;
+                if (typeAdvantage[chosenAttackType] && typeAdvantage[chosenAttackType][currentEnemy.type]) {
+                    modifier = typeAdvantage[chosenAttackType][currentEnemy.type];
+                }
+                let damage = Math.round(25 * modifier);
+                enemyHP = Math.max(0, enemyHP - damage); updateHPVisuals();
+                document.getElementById('log-text').innerText = `🟢 正解！\n相手に ${damage} ダメージ！`;
+                setTimeout(() => { if (enemyHP <= 0) winBattle(); else enemyTurn(); }, 1800);
+            } else {
+                document.getElementById('log-text').innerText = `🔴 不正解！ 正解は「${activeQuiz.answer}」`;
+                setTimeout(enemyTurn, 1800);
+            }
+        }
+
+        function enemyTurn() {
+            if (enemyHP <= 0) return;
+            let dmg = currentEnemy.isBoss ? Math.floor(Math.random() * 15) + 10 : Math.floor(Math.random() * 8) + 4;
+            playerHP = Math.max(0, playerHP - dmg); updateHPVisuals();
+            document.getElementById('log-text').innerText = `${currentEnemy.name} のこうげき！\n${dmg} のダメージ！`;
+            setTimeout(() => { if (playerHP <= 0) runAway(); else showMainMenu(); }, 1500);
+        }
+
+        function winBattle() {
+            document.getElementById('log-text').innerText = `${currentEnemy.name} を撃破した！`;
+            if(currentEnemy.isBoss) {
+                clearedBosses[activeBossType] = true; 
+                if(activeBossType === "both") {
+                    nextStageUnlocked = true; 
+                }
+            } else {
+                killCount++; 
+            }
+            setTimeout(runAway, 2000);
+        }
+
+        function openPartyMenu(inBattle) { isBattleSwapMode = inBattle; document.getElementById('party-modal').classList.add('active'); renderPartyList(); }
+        function closePartyMenu() { document.getElementById('party-modal').classList.remove('active'); }
+        function renderPartyList() {
+            const c = document.getElementById('party-list-container'); c.innerHTML = "";
+            playerParty.forEach((m, i) => {
+                let btn = isBattleSwapMode && i !== 0 ? `<button class="action-btn" style="padding: 4px 10px;" onclick="swapMonsterInBattle(${i})">出す</button>` : "";
+                c.innerHTML += `<div class="party-item"><div>${m.sprite} ${m.name} (${m.type})</div><div>${btn}</div></div>`;
+            });
+        }
+        function swapMonsterInBattle(idx) {
+            const t = playerParty[0]; playerParty[0] = playerParty[idx]; playerParty[idx] = t;
+            closePartyMenu(); triggerEncounter(currentEnemy);
+        }
+    </script>
+</body>
+</html>

@@ -22,7 +22,7 @@
         }
 
         .container { text-align: center; width: 100%; max-width: 900px; }
-        .version-badge { display: inline-block; font-size: 0.75rem; color: #03dac6; background-color: rgba(3, 218, 198, 0.15); border: 1px solid #03dac6; padding: 2px 12px; border-radius: 20px; margin-bottom: 15px; letter-spacing: 1px; }
+        .version-badge { display: inline-block; font-size: 0.75rem; color: #ff007f; background-color: rgba(255, 0, 127, 0.15); border: 1px solid #ff007f; padding: 2px 12px; border-radius: 20px; margin-bottom: 15px; letter-spacing: 1px; }
         h1 { font-size: 3.5rem; font-weight: 900; color: #ffffff; letter-spacing: 6px; margin-bottom: 5px; }
         .squid-symbols { font-size: 2.2rem; margin-bottom: 20px; letter-spacing: 15px; padding-left: 15px; }
         .circle { color: #ffffff; } .triangle { color: #ff007f; } .square { color: #ff007f; }
@@ -30,7 +30,7 @@
 
         /* 🎴 コレクション独立コンテンツ枠 */
         .collection-banner-box {
-            max-width: 500px; width: 100%; margin: 0 auto 35px auto;
+            max-width: 500px; width: 100%; margin: 0 auto 20px auto;
             background: linear-gradient(135deg, #111217 0%, #162435 100%);
             border: 3px solid #03dac6; border-radius: 12px; padding: 20px 25px;
             display: flex; align-items: center; justify-content: space-between;
@@ -44,11 +44,28 @@
         .collection-icon-giant { font-size: 2.5rem; opacity: 0.8; transition: transform 0.3s; }
         .collection-banner-box:hover .collection-icon-giant { transform: scale(1.1) rotate(5deg); opacity: 1; }
 
+        /* 🔥 【新設】カルーセル外・独立ベータテスト専用特設バナー */
+        .beta-special-section {
+            max-width: 500px; width: 100%; margin: 0 auto 35px auto;
+            background: linear-gradient(135deg, #16171e 0%, #250a18 100%);
+            border: 3px dashed #ff007f; border-radius: 12px; padding: 18px 22px;
+            position: relative; overflow: hidden; text-align: left;
+            text-decoration: none; color: #ffffff; display: flex; align-items: center;
+            justify-content: space-between; box-shadow: 0 0 20px rgba(255, 0, 127, 0.2);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .beta-special-section:hover { transform: translateY(-4px); border-style: solid; box-shadow: 0 8px 25px rgba(255, 0, 127, 0.6); }
+        .beta-badge { position: absolute; top: 0; right: 0; background: #ff007f; color: white; font-size: 9px; font-weight: bold; padding: 2px 10px; border-bottom-left-radius: 6px; letter-spacing: 1px; }
+        .beta-info h3 { font-size: 1.15rem; font-weight: 900; color: #fff; margin-bottom: 2px; }
+        .beta-info p { font-size: 0.75rem; color: #ccc; line-height: 1.4; }
+        .beta-icon { font-size: 2.2rem; margin-left: 10px; animation: pulse-icon 2s infinite alternate; }
+        @keyframes pulse-icon { 0% { opacity: 0.6; } 100% { opacity: 1; transform: scale(1.05); } }
+
         /* 📁 カテゴリー選択メニュー */
         .tab-menu { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
-        .tab-btn { background: rgba(22, 23, 30, 0.6); border: 2px solid #2a2b36; color: #aaa; padding: 8px 18px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer; transition: all 0.25s ease; }
-        .tab-btn:hover { color: #ffffff; border-color: #ff007f; }
-        .tab-btn.active { background: #ff007f; color: #ffffff; border-color: #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.5); }
+        .tab-menu button { background: rgba(22, 23, 30, 0.6); border: 2px solid #2a2b36; color: #aaa; padding: 8px 18px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer; transition: all 0.25s ease; }
+        .tab-menu button:hover { color: #ffffff; border-color: #ff007f; }
+        .tab-menu button.active { background: #ff007f; color: #ffffff; border-color: #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.5); }
 
         /* 🕹️ 横スクロールカルーセル */
         .game-carousel-wrapper { width: 100%; padding: 10px 0; margin-bottom: 35px; position: relative; }
@@ -86,7 +103,7 @@
 <body>
 
     <div class="container">
-        <div class="version-badge">SYSTEM VERSION：v3.1.0</div>
+        <div class="version-badge">SYSTEM VERSION：v3.2.0-beta</div>
 
         <h1>リカゲーム</h1>
         <div class="squid-symbols">
@@ -103,6 +120,19 @@
             <span class="collection-icon-giant">🎴</span>
         </a>
 
+        <!-- 🔥 【別枠化成功】カルーセルから独立させた「ベータテスト専用バナー」 -->
+        <a href="rikamon_rpg_beta.html" class="beta-special-section">
+            <div class="beta-badge">BETA TEST</div>
+            <div class="beta-info">
+                <h3>⚔️ リカモンRPG 〜理科の四星獣〜</h3>
+                <p>
+                    「生命・物質・地球・エネルギー」の4すくみ相性バトル！<br>
+                    記述問題から4択を自動錬成するベータテスト版を体験せよ。
+                </p>
+            </div>
+            <span class="beta-icon">⚔️</span>
+        </a>
+
         <!-- 📁 タブメニュー -->
         <div class="tab-menu">
             <button class="tab-btn active" onclick="filterStages('all')">ALL STAGE</button>
@@ -111,29 +141,29 @@
             <button class="tab-btn" onclick="filterStages('bonus')">BONUS</button>
         </div>
 
-        <!-- 🕹️ ゲーム一覧カルーセル（稼働中のステージを先頭に繰り上げ！） -->
+        <!-- 🕹️ ゲーム一覧カルーセル（通常版だけがすっきりスクロールします） -->
         <div class="game-carousel-wrapper">
             <div class="game-list">
                 
-                <!-- 新 STAGE 01 (旧03：一問一答) -->
+                <!-- STAGE 01 -->
                 <a href="rika_game_quiz.html" class="game-card" data-tags="chem-phys">
                     <div class="card-info"><span class="card-stage-num">STAGE 01</span><span class="card-title">理科一問一答<br>(全526問)</span></div>
                     <span class="card-symbol">○</span>
                 </a>
 
-                <!-- 新 STAGE 02 (旧04：元素シューター) -->
+                <!-- STAGE 02 -->
                 <a href="rika_game_invader.html" class="game-card" data-tags="chem-phys">
                     <div class="card-info"><span class="card-stage-num">STAGE 02</span><span class="card-title">元素記号<br>シューター</span></div>
                     <span class="card-symbol">👾</span>
                 </a>
 
-                <!-- 新 STAGE 03 (旧05：太陽系探索) -->
+                <!-- STAGE 03 -->
                 <a href="rika_game_space.html" class="game-card" data-tags="chem-phys">
                     <div class="card-info"><span class="card-stage-num">STAGE 03</span><span class="card-title">太陽系運行<br>探索ゲーム</span></div>
                     <span class="card-symbol">🪐</span>
                 </a>
 
-                <!-- 🔒 新 STAGE 04 (未解放・生物ロック枠１) -->
+                <!-- STAGE 04 (未解放・生物ロック枠１) -->
                 <div class="game-card locked" data-tags="bio">
                     <div class="card-info">
                         <span class="card-stage-num">STAGE 04</span>
@@ -142,7 +172,7 @@
                     <span class="locked-symbol">🔒</span>
                 </div>
                 
-                <!-- 🔒 新 STAGE 05 (未解放・生物ロック枠２) -->
+                <!-- STAGE 05 (未解放・生物ロック枠２) -->
                 <div class="game-card locked" data-tags="bio">
                     <div class="card-info">
                         <span class="card-stage-num">STAGE 05</span>
@@ -151,18 +181,18 @@
                     <span class="locked-symbol">🔒</span>
                 </div>
 
-                <!-- 🔑 隠しシークレットステージ（SECRET999で出現） -->
+                <!-- 🔑 隠しシークレットステージ -->
                 <a href="#" id="secret-stage-card" class="game-card" data-tags="bonus" style="display: none; border-color: gold; background: #251c05;" onclick="alert('シークレット任務は次回アップデートで完全解禁！データ適合完了！'); return false;">
                     <div class="card-info">
                         <span class="card-stage-num" style="color:gold;">SECRET STAGE</span>
-                        <span class="card-title" style="color:gold;">極秘コード任務<br>【天体シミュライズ】</span>
+                        <span class="card-title" style="color:gold;">極極秘コード任務<br>【天体シミュライズ】</span>
                     </div>
                     <span class="card-symbol" style="color:gold;">👑</span>
                 </a>
 
-                <!-- STAGE 06 (大トリ：リカモンRPG) -->
+                <!-- STAGE 06 (通常版リカモン) -->
                 <a href="rika_game_rikamon.html" class="game-card" data-tags="bonus">
-                    <div class="card-info"><span class="card-stage-num">STAGE 06</span><span class="card-title">リカモンバトル<br>(ボーナス)</span></div>
+                    <div class="card-info"><span class="card-stage-num">STAGE 06</span><span class="card-title">リカモンバトル<br>(通常版)</span></div>
                     <span class="card-symbol" style="color:#00ff66;">✨</span>
                 </a>
 
@@ -176,7 +206,7 @@
 
     <script>
         function filterStages(tag) {
-            const buttons = document.querySelectorAll('.tab-menu');
+            const buttons = document.querySelectorAll('.tab-menu button');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
