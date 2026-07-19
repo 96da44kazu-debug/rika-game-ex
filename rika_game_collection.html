@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リカゲーム - コレクション＆コード入力</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght=700;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0b0c10;
+            color: #ffffff;
+            font-family: 'Noto Sans JP', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        /* 🚪 戻るボタンとヘッダー */
+        .header-area {
+            position: relative;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2a2b36;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0; top: 5px;
+            background: #20222b;
+            border: 2px solid #3f4257;
+            color: white;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .back-btn:hover { border-color: #ff007f; color: #ff007f; }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(3, 218, 198, 0.5);
+        }
+
+        /* 🔑 コード入力セクション */
+        .code-section {
+            background: #111217;
+            border: 2px solid #ff007f;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.2);
+        }
+
+        .code-section h3 { font-size: 1.1rem; color: #ff007f; margin-bottom: 12px; letter-spacing: 1px; }
+        .input-group { display: flex; gap: 10px; justify-content: center; }
+        .code-field { background: #20222b; border: 2px solid #3f4257; color: #ffffff; padding: 12px 15px; font-size: 16px; font-weight: bold; border-radius: 6px; text-align: center; letter-spacing: 2px; width: 60%; outline: none; }
+        .code-field:focus { border-color: #03dac6; }
+        .submit-btn { background: #ff007f; color: white; border: none; padding: 12px 25px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .submit-btn:hover { background: #e60072; }
+
+        /* 🏆 実績（証）セクション */
+        .section-box {
+            background: #16171e;
+            border: 2px solid #2a2b36;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .section-box h3 { font-size: 1.1rem; color: #03dac6; margin-bottom: 15px; border-left: 4px solid #03dac6; padding-left: 10px; }
+
+        .trophy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .trophy-card {
+            background: #111217;
+            border: 2px solid #2a2b36;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            opacity: 0.3; /* 未解除時は薄暗い */
+            transition: all 0.3s;
+        }
+
+        .trophy-card.unlocked {
+            opacity: 1;
+            border-color: #00ff66;
+            box-shadow: 0 4px 12px rgba(0, 255, 102, 0.2);
+        }
+
+        .trophy-icon { font-size: 2rem; }
+        .trophy-info h4 { font-size: 0.95rem; color: #fff; margin-bottom: 2px; }
+        .trophy-info p { font-size: 0.8rem; color: #a0c4ff; }
+
+        /* 🎴 カードアルバムセクション */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+        .rikamon-card {
+            background: #1f2029; border: 2px solid #333; border-radius: 6px; padding: 8px; text-align: center;
+            position: relative; overflow: hidden; aspect-ratio: 3 / 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .card-placeholder { font-size: 32px; filter: grayscale(100%); opacity: 0.15; }
+        .card-name { font-size: 11px; font-weight: bold; color: #555; margin-top: 5px; }
+        .rikamon-card img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; cursor: pointer; }
+        
+        .rikamon-card.owned img { display: block; animation: cardGet 0.5s ease-out; }
+        .rikamon-card.owned { border-color: #00f0ff; box-shadow: 0 4px 10px rgba(0, 240, 255, 0.3); }
+        .rikamon-card.owned.shiny-card { border-color: gold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
+
+        @keyframes cardGet {
+            0% { transform: scale(0.5); filter: brightness(2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        footer { margin-top: 30px; font-size: 0.8rem; color: #444655; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="header-area">
+            <a href="index.html" class="back-btn">🚪 ポータルへ</a>
+            <h1>コレクションルーム 🐾</h1>
+        </div>
+
+        <!-- 🔑 コード入力窓 -->
+        <div class="code-section">
+            <h3>🔑 秘密のコード・証を入力してデータを開放せよ</h3>
+            <div class="input-group">
+                <input type="text" class="code-field" id="codeInput" placeholder="CODEを入力" autocomplete="off">
+                <button class="submit-btn" onclick="processCode()">送信</button>
+            </div>
+        </div>
+
+        <!-- 🏆 獲得した証（実績） -->
+        <div class="section-box">
+            <h3>🏆 科学者の証（特別実績記録）</h3>
+            <div class="trophy-grid">
+                <!-- 証1: 元素インベーダークリア -->
+                <div class="trophy-card" id="badge-DEFENDER">
+                    <div class="trophy-icon">🛡️</div>
+                    <div class="trophy-info">
+                        <h4>惑星防衛科学者</h4>
+                        <p>元素シュータークリアの証</p>
+                    </div>
+                </div>
+                <!-- 証2: 太陽系全問正解 -->
+                <div class="trophy-card" id="badge-ASTRONOMY">
+                    <div class="trophy-icon">👑</div>
+                    <div class="trophy-info">
+                        <h4>宇宙マスター 🐾</h4>
+                        <p>太陽系クエスの全問正解の証</p>
+                    </div>
+                </div>
+                <!-- 証3: 超スピードクリア -->
+                <div class="trophy-card" id="badge-SPEED">
+                    <div class="trophy-icon">⚡</div>
+                    <div class="trophy-info">
+                        <h4>神速の思考</h4>
+                        <p>タイムアタックコードの証</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎴 カードコレクション -->
+        <div class="section-box">
+            <h3>🎴 リカモンカードアルバム</h3>
+            <div class="card-grid">
+                <div class="rikamon-card" id="card-MITO"><div class="card-placeholder">🧬</div><div class="card-name">ミトコンド</div><img src="rikamon_card/MITO.png"></div>
+                <div class="rikamon-card" id="card-ELODEA"><div class="card-placeholder">🌿</div><div class="card-name">オオカナダ</div><img src="rikamon_card/ELODEA.png"></div>
+                <div class="rikamon-card" id="card-PARAM"><div class="card-placeholder">🩴</div><div class="card-name">ゾウリムシアン</div><img src="rikamon_card/PARAM.png"></div>
+                <div class="rikamon-card" id="card-AMMON"><div class="card-placeholder">🐚</div><div class="card-name">アンモナイトス</div><img src="rikamon_card/AMMON.png"></div>
+                <div class="rikamon-card" id="card-MAGNET"><div class="card-placeholder">🧲</div><div class="card-name">ハエナワル</div><img src="rikamon_card/MAGNET.png"></div>
+                <div class="rikamon-card" id="card-QUARTZ"><div class="card-placeholder">💎</div><div class="card-name">セキエイノドン</div><img src="rikamon_card/QUARTZ.png"></div>
+                <div class="rikamon-card" id="card-HEMO"><div class="card-placeholder">🔴</div><div class="card-name">ヘモグロビンゴ</div><img src="rikamon_card/HEMO.png"></div>
+                <div class="rikamon-card" id="card-MAGMA"><div class="card-placeholder">🌋</div><div class="card-name">マグマドラン</div><img src="rikamon_card/MAGMA.png"></div>
+                <div class="rikamon-card" id="card-NH3GAS"><div class="card-placeholder">💨</div><div class="card-name">アンモニアデス</div><img src="rikamon_card/NH3GAS.png"></div>
+                <div class="rikamon-card" id="card-GRAVITY"><div class="card-placeholder">🍎</div><div class="card-name">ニュートンG</div><img src="rikamon_card/GRAVITY.png"></div>
+                
+                <div class="rikamon-card" id="card-SHINY456" style="grid-column: span 3; aspect-ratio: auto; height: 95px;">
+                    <div class="card-placeholder">✨👑★</div>
+                    <div class="card-name">幻の色違いリカモン</div>
+                    <img src="rikamon_card/SHINY456.png">
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © 456 RIKA GAME COLLECTION.
+        </footer>
+    </div>
+
+    <script>
+        // ローカルストレージを使って、ブラウザを閉じても獲得データが消えないように保存
+        let collectionData = JSON.parse(localStorage.getItem('rika_collection_save')) || {
+            cards: [],
+            badges: [],
+            stagesUnlocked: false
+        };
+
+        // ページ読み込み時にセーブデータを画面に反映
+        window.onload = function() {
+            collectionData.cards.forEach(code => {
+                const el = document.getElementById('card-' + code);
+                if(el) {
+                    el.classList.add('owned');
+                    if(code === "SHINY456") el.classList.add('shiny-card');
+                }
+            });
+            collectionData.badges.forEach(badgeId => {
+                const el = document.getElementById('badge-' + badgeId);
+                if(el) el.classList.add('unlocked');
+            });
+        };
+
+        function saveGame() {
+            localStorage.setItem('rika_collection_save', JSON.stringify(collectionData));
+        }
+
+        function processCode() {
+            const input = document.getElementById('codeInput');
+            const code = input.value.trim().toUpperCase();
+            if(!code) return;
+
+            // 🎴 リカモンカード用コードの判定
+            const cardCodes = ["MITO", "ELODEA", "PARAM", "AMMON", "MAGNET", "QUARTZ", "HEMO", "MAGMA", "NH3GAS", "GRAVITY", "SHINY456"];
+            
+            if (cardCodes.includes(code)) {
+                if (collectionData.cards.includes(code)) {
+                    alert("⚠️ そのカードはすでに獲得済みだぞ。");
+                } else {
+                    collectionData.cards.push(code);
+                    const el = document.getElementById('card-' + code);
+                    el.classList.add('owned');
+                    if(code === "SHINY456") {
+                        el.classList.add('shiny-card');
+                        // 🌟 全問正解「SHINY456」を入力したら、宇宙マスターの「証」も同時にON！
+                        unlockBadge("ASTRONOMY");
+                        alert("✨👑 奇跡発生 👑✨\n太陽系全問正解の証【宇宙マスター】を獲得！\nさらに幻の色違いリカモンカードを復元したぞ！");
+                    } else {
+                        alert("🟢 リカモン捕獲成功！\nカードアルバムに新しいデータが追加された！");
+                    }
+                    saveGame();
+                }
+                input.value = "";
+                return;
+            }
+
+            // 🛡️ 元素シュータークリアコード「ELEMENT456」
+            if (code === "ELEMENT456") {
+                unlockBadge("DEFENDER");
+                alert("🛡️ 証のロック解除！\n【惑星防衛科学者】の称号を獲得した！");
+                input.value = "";
+                return;
+            }
+
+            // ⚡ タイムアタックなど将来用「SPEED777」
+            if (code === "SPEED777") {
+                unlockBadge("SPEED");
+                alert("⚡ 証のロック解除！\n【神速の思考】の称号を獲得した！");
+                input.value = "";
+                return;
+            }
+
+            // 🔑 隠しステージ解放コード「SECRET999」
+            if (code === "SECRET999") {
+                if(collectionData.stagesUnlocked) {
+                    alert("⚠️ 隠しステージはすでに解放されているぞ。");
+                } else {
+                    collectionData.stagesUnlocked = true;
+                    alert("🔓 EMERGENCY!! 🔓\n極秘アクセスコードを検出！\nポータル画面に【隠しシークレットステージ】が解放されたぞ！");
+                    saveGame();
+                }
+                input.value = "";
+                return;
+            }
+
+            alert("🔴 無効なアクセスコードだ。");
+            input.value = "";
+        }
+
+        function unlockBadge(badgeId) {
+            if (!collectionData.badges.includes(badgeId)) {
+                collectionData.badges.push(badgeId);
+                const el = document.getElementById('badge-' + badgeId);
+                if(el) el.classList.add('unlocked');
+                saveGame();
+            }
+        }
+    </script>
+</body>
+</html>
